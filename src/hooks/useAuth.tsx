@@ -1,117 +1,151 @@
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
+import { User, AuthError } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signOut: () => Promise<{ error: AuthError | null }>;
+  signInWithGoogle: () => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          if (error) {
+            console.error('Error getting session:', error);
+          } else {
+            setUser(session?.user ?? null);
+            console.log('Initial session loaded:', session?.user?.email || 'No user');
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Unexpected error getting session:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    getInitialSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        if (!mounted) return;
+
+        console.log('Auth state changed:', event, session?.user?.email || 'No user');
         
-        // Redirecionar para chat após login bem-sucedido
-        if (event === 'SIGNED_IN' && session) {
-          window.location.href = '/chat';
+        // Only update state for meaningful changes
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          setUser(session?.user ?? null);
+        }
+        
+        // Only set loading to false after initial session is processed
+        if (event !== 'INITIAL_SESSION') {
+          setLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    if (!error) {
+      // Don't set loading to false here, let the auth state change handle it
+    } else {
+      setLoading(false);
+    }
+    
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
+  const signUp = async (email: string, password: string) => {
+    setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        },
-      },
     });
+    setLoading(false);
+    return { error };
+  };
+
+  const signOut = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signOut();
+    
+    if (!error) {
+      // Don't set loading to false here, let the auth state change handle it
+    } else {
+      setLoading(false);
+    }
+    
     return { error };
   };
 
   const signInWithGoogle = async () => {
+    setLoading(true);
+    
     try {
-      console.log('Iniciando signInWithGoogle...');
-      
-      // Usar o domínio atual da aplicação para o redirect
-      const redirectUrl = `${window.location.origin}/chat`;
-      console.log('Redirect URL:', redirectUrl);
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/chat`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
           }
         }
       });
-      
-      if (error) {
-        console.error('Erro no signInWithOAuth:', error);
-      }
-      
-      return { error };
-    } catch (err) {
-      console.error('Erro inesperado no signInWithGoogle:', err);
-      return { error: err };
-    }
-  };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+      if (error) {
+        console.error('Google sign in error:', error);
+        setLoading(false);
+        return { error };
+      }
+
+      // Don't set loading to false here for OAuth, the redirect will handle it
+      return { error: null };
+    } catch (err) {
+      console.error('Unexpected Google sign in error:', err);
+      setLoading(false);
+      return { error: err as AuthError };
+    }
   };
 
   const value = {
     user,
-    session,
     loading,
     signIn,
     signUp,
-    signInWithGoogle,
     signOut,
+    signInWithGoogle,
   };
 
   return (
@@ -119,12 +153,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -24,8 +25,8 @@ export function useConversations() {
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Fetch conversations
-  const fetchConversations = async () => {
+  // Fetch conversations with useCallback to prevent unnecessary re-renders
+  const fetchConversations = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -44,10 +45,10 @@ export function useConversations() {
       console.error('Unexpected error fetching conversations:', err);
     }
     setLoading(false);
-  };
+  }, [user]);
 
-  // Fetch messages for a conversation
-  const fetchMessages = async (conversationId: string) => {
+  // Fetch messages with useCallback
+  const fetchMessages = useCallback(async (conversationId: string) => {
     if (!user) return;
 
     try {
@@ -60,7 +61,6 @@ export function useConversations() {
       if (error) {
         console.error('Error fetching messages:', error);
       } else {
-        // Type cast the data to ensure role is properly typed
         const typedMessages: Message[] = (data || []).map(msg => ({
           id: msg.id,
           content: msg.content,
@@ -72,10 +72,10 @@ export function useConversations() {
     } catch (err) {
       console.error('Unexpected error fetching messages:', err);
     }
-  };
+  }, [user]);
 
-  // Create new conversation
-  const createConversation = async (title?: string) => {
+  // Create new conversation with useCallback
+  const createConversation = useCallback(async (title?: string) => {
     if (!user) return null;
 
     try {
@@ -101,14 +101,13 @@ export function useConversations() {
       console.error('Unexpected error creating conversation:', err);
       return null;
     }
-  };
+  }, [user, fetchConversations]);
 
-  // Delete conversation
-  const deleteConversation = async (conversationId: string) => {
+  // Delete conversation with useCallback
+  const deleteConversation = useCallback(async (conversationId: string) => {
     if (!user) return false;
 
     try {
-      // First delete all messages in the conversation
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
@@ -119,7 +118,6 @@ export function useConversations() {
         return false;
       }
 
-      // Then delete the conversation
       const { error: conversationError } = await supabase
         .from('conversations')
         .delete()
@@ -130,10 +128,8 @@ export function useConversations() {
         return false;
       }
 
-      // Update local state
       await fetchConversations();
       
-      // If we deleted the current conversation, clear it
       if (currentConversation === conversationId) {
         setCurrentConversation(null);
         setMessages([]);
@@ -144,10 +140,10 @@ export function useConversations() {
       console.error('Unexpected error deleting conversation:', err);
       return false;
     }
-  };
+  }, [user, fetchConversations, currentConversation]);
 
-  // Send message with OpenAI integration
-  const sendMessage = async (content: string, conversationId?: string) => {
+  // Send message with useCallback
+  const sendMessage = useCallback(async (content: string, conversationId?: string) => {
     if (!user) return;
 
     let activeConversationId = conversationId || currentConversation;
@@ -155,7 +151,6 @@ export function useConversations() {
     try {
       setIsProcessing(true);
 
-      // Create conversation if none exists
       if (!activeConversationId) {
         const newConversation = await createConversation();
         if (!newConversation) return;
@@ -163,7 +158,6 @@ export function useConversations() {
         setCurrentConversation(activeConversationId);
       }
 
-      // Add user message
       const { error: userMessageError } = await supabase
         .from('messages')
         .insert([
@@ -179,12 +173,10 @@ export function useConversations() {
         return;
       }
 
-      // Refresh messages immediately for user message
       if (activeConversationId) {
         await fetchMessages(activeConversationId);
       }
 
-      // Call OpenAI API through edge function
       const { data: aiData, error: aiError } = await supabase.functions.invoke('chat-ai', {
         body: { message: content }
       });
@@ -201,7 +193,6 @@ export function useConversations() {
         aiResponse = 'Desculpe, não consegui processar sua mensagem no momento. Tente novamente.';
       }
 
-      // Add AI response to database
       await supabase
         .from('messages')
         .insert([
@@ -212,8 +203,8 @@ export function useConversations() {
           },
         ]);
 
-      // Update conversation title if it's a new conversation
-      if (conversations.find(c => c.id === activeConversationId)?.title === 'Nova Conversa') {
+      const currentConv = conversations.find(c => c.id === activeConversationId);
+      if (currentConv?.title === 'Nova Conversa') {
         const titlePrompt = content.length > 50 ? content.substring(0, 50) + '...' : content;
         await supabase
           .from('conversations')
@@ -223,7 +214,6 @@ export function useConversations() {
         await fetchConversations();
       }
 
-      // Refresh messages with AI response
       if (activeConversationId) {
         await fetchMessages(activeConversationId);
       }
@@ -233,21 +223,26 @@ export function useConversations() {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [user, currentConversation, createConversation, fetchMessages, conversations, fetchConversations]);
 
+  // Only fetch conversations when user changes and is available
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       fetchConversations();
     }
-  }, [user]);
+  }, [user, fetchConversations, loading]);
 
+  // Only fetch messages when currentConversation changes and is not null
   useEffect(() => {
-    if (currentConversation) {
+    if (currentConversation && user) {
       fetchMessages(currentConversation);
+    } else if (!currentConversation) {
+      setMessages([]);
     }
-  }, [currentConversation]);
+  }, [currentConversation, fetchMessages, user]);
 
-  return {
+  // Memoize the return value to prevent unnecessary re-renders
+  const memoizedValue = useMemo(() => ({
     conversations,
     messages,
     currentConversation,
@@ -258,5 +253,17 @@ export function useConversations() {
     sendMessage,
     fetchConversations,
     deleteConversation,
-  };
+  }), [
+    conversations,
+    messages,
+    currentConversation,
+    loading,
+    isProcessing,
+    createConversation,
+    sendMessage,
+    fetchConversations,
+    deleteConversation,
+  ]);
+
+  return memoizedValue;
 }
