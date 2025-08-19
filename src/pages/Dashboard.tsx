@@ -12,7 +12,6 @@ import {
   Settings,
   MessageCircle,
   TrendingUp,
-  Users,
   Calendar,
   Gamepad2,
   BookOpen
@@ -103,7 +102,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <MetricCard
             title={t('conversationsToday')}
             value={stats.conversationsToday.toString()}
@@ -129,15 +128,6 @@ const Dashboard = () => {
             trend={{
               value: 23,
               label: "from last month"
-            }}
-          />
-          <MetricCard
-            title="Total de Conversas"
-            value={stats.totalConversations.toString()}
-            icon={<Users className="h-4 w-4" />}
-            trend={{
-              value: 5,
-              label: "from last week"
             }}
           />
         </div>
@@ -206,10 +196,6 @@ const Dashboard = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tokens estimados</span>
                     <span className="font-medium">{stats.estimatedTokens.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total conversas</span>
-                    <span className="font-medium">{stats.totalConversations}</span>
                   </div>
                 </div>
               </div>
