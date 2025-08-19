@@ -155,7 +155,7 @@ const Index = () => {
             <Button 
               size="sm" 
               className="bg-hero-gradient hover:opacity-90"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/free-chat')}
             >
               Começar Grátis
             </Button>
@@ -187,7 +187,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="bg-hero-gradient hover:opacity-90 text-white px-8"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/free-chat')}
             >
               Começar Agora
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -220,7 +220,7 @@ const Index = () => {
                       </p>
                       <Button 
                         className="mt-4 bg-hero-gradient hover:opacity-90"
-                        onClick={() => navigate('/dashboard')}
+                        onClick={() => navigate('/free-chat')}
                       >
                         Testar Agora
                       </Button>
@@ -350,7 +350,7 @@ const Index = () => {
                   <Button 
                     className={`w-full ${plan.popular ? 'bg-hero-gradient hover:opacity-90' : ''}`}
                     variant={plan.popular ? 'default' : 'outline'}
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate(plan.name === 'Free' ? '/free-chat' : '/login')}
                   >
                     {plan.cta}
                   </Button>
@@ -375,7 +375,7 @@ const Index = () => {
               size="lg" 
               variant="secondary" 
               className="text-primary bg-white hover:bg-white/90"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/free-chat')}
             >
               Começar Grátis Agora
               <ArrowRight className="ml-2 h-5 w-5" />
