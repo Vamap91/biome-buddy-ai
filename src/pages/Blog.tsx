@@ -1,45 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useCallback } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Leaf, 
-  PlusCircle, 
   Search, 
   Filter,
   Clock,
-  User,
   Tag,
-  Share2,
   BookOpen,
   TrendingUp,
   Calendar,
   Eye,
   Heart,
-  MessageCircle,
-  Edit,
-  Trash2,
-  Save,
-  X,
-  LayoutDashboard,
-  Gamepad2,
-  Settings
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import BlogHeader from '@/components/blog/BlogHeader';
+import CreatePostForm from '@/components/blog/CreatePostForm';
+import PostDetail from '@/components/blog/PostDetail';
+
+interface BlogPost {
+  id: number;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  authorRole: string;
+  authorAvatar: string;
+  publishDate: string;
+  category: string;
+  tags: string[];
+  readTime: string;
+  views: number;
+  likes: number;
+  comments: number;
+  featured: boolean;
+}
 
 const BlogSystem = () => {
-  const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState('home'); // home, create, post, edit
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [currentView, setCurrentView] = useState('home');
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [isEditing, setIsEditing] = useState(false);
 
-  // Mock data - Em produção viria de uma API/Supabase
-  const [blogPosts, setBlogPosts] = useState([
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([
     {
       id: 1,
       title: "Descoberta de Nova Espécie de Bromélia na Mata Atlântica",
@@ -119,15 +123,6 @@ O projeto também gera renda para as comunidades locais através da coleta suste
     { id: 'educacao', name: 'Educação', count: blogPosts.filter(p => p.category === 'educacao').length }
   ];
 
-  const [newPost, setNewPost] = useState({
-    title: '',
-    excerpt: '',
-    content: '',
-    category: 'pesquisa',
-    tags: [],
-    newTag: ''
-  });
-
   const filteredPosts = blogPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -138,105 +133,40 @@ O projeto também gera renda para as comunidades locais através da coleta suste
 
   const featuredPosts = blogPosts.filter(post => post.featured);
 
-  const handleCreatePost = () => {
-    if (!newPost.title || !newPost.content) return;
-    
-    const post = {
+  const handleCreatePost = useCallback((newPostData: Omit<BlogPost, 'id' | 'author' | 'authorRole' | 'authorAvatar' | 'publishDate' | 'readTime' | 'views' | 'likes' | 'comments' | 'featured'>) => {
+    const post: BlogPost = {
       id: Date.now(),
-      ...newPost,
+      ...newPostData,
       author: "Curador Dr_C",
       authorRole: "Editor Científico",
       authorAvatar: "/api/placeholder/40/40",
       publishDate: new Date().toISOString().split('T')[0],
-      readTime: Math.ceil(newPost.content.length / 200) + " min",
+      readTime: Math.ceil(newPostData.content.length / 200) + " min",
       views: 0,
       likes: 0,
       comments: 0,
       featured: false
     };
     
-    setBlogPosts([post, ...blogPosts]);
-    setNewPost({
-      title: '',
-      excerpt: '',
-      content: '',
-      category: 'pesquisa',
-      tags: [],
-      newTag: ''
-    });
+    setBlogPosts(prev => [post, ...prev]);
     setCurrentView('home');
-  };
+  }, []);
 
-  const addTag = () => {
-    if (newPost.newTag && !newPost.tags.includes(newPost.newTag)) {
-      setNewPost({
-        ...newPost,
-        tags: [...newPost.tags, newPost.newTag],
-        newTag: ''
-      });
-    }
-  };
+  const handleUpdatePost = useCallback((updatedPost: BlogPost) => {
+    setBlogPosts(prev => 
+      prev.map(post => 
+        post.id === updatedPost.id ? updatedPost : post
+      )
+    );
+  }, []);
 
-  const removeTag = (tagToRemove) => {
-    setNewPost({
-      ...newPost,
-      tags: newPost.tags.filter(tag => tag !== tagToRemove)
-    });
-  };
+  const handleViewPost = useCallback((post: BlogPost) => {
+    setSelectedPost(post);
+    setCurrentView('post');
+  }, []);
 
-  // Header Component
-  const BlogHeader = () => (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
-              <Leaf className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Blog Dr_C v2.0</h1>
-              <p className="text-sm text-gray-600">Centro de Conhecimento em Biodiversidade</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm">
-              <LayoutDashboard className="h-4 w-4 mr-2" />
-              Dashboard
-            </Button>
-            <Button onClick={() => navigate('/games')} variant="outline" size="sm">
-              <Gamepad2 className="h-4 w-4 mr-2" />
-              Jogos
-            </Button>
-            <Button onClick={() => navigate('/settings')} variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Configurações
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentView('home')}
-              className={currentView === 'home' ? 'bg-green-50 border-green-300' : ''}
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Blog
-            </Button>
-            <Button 
-              onClick={() => setCurrentView('create')}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Novo Post
-            </Button>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-
-  // Blog Home View
   const BlogHome = () => (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Search and Filters */}
       <div className="mb-8 space-y-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
@@ -254,7 +184,6 @@ O projeto também gera renda para as comunidades locais através da coleta suste
           </Button>
         </div>
         
-        {/* Categories */}
         <div className="flex flex-wrap gap-2">
           {categories.map(category => (
             <Button
@@ -270,7 +199,6 @@ O projeto também gera renda para as comunidades locais através da coleta suste
         </div>
       </div>
 
-      {/* Featured Posts */}
       {featuredPosts.length > 0 && selectedCategory === 'all' && !searchTerm && (
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
@@ -291,10 +219,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
                   </Badge>
                   <h3 
                     className="text-xl font-bold mb-3 hover:text-green-600 cursor-pointer"
-                    onClick={() => {
-                      setSelectedPost(post);
-                      setCurrentView('post');
-                    }}
+                    onClick={() => handleViewPost(post)}
                   >
                     {post.title}
                   </h3>
@@ -330,7 +255,6 @@ O projeto também gera renda para as comunidades locais através da coleta suste
         </section>
       )}
 
-      {/* All Posts */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
           {searchTerm ? `Resultados para "${searchTerm}"` : 'Todos os Posts'}
@@ -358,10 +282,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
                           </Badge>
                           <h3 
                             className="text-xl font-bold hover:text-green-600 cursor-pointer"
-                            onClick={() => {
-                              setSelectedPost(post);
-                              setCurrentView('post');
-                            }}
+                            onClick={() => handleViewPost(post)}
                           >
                             {post.title}
                           </h3>
@@ -426,197 +347,24 @@ O projeto também gera renda para as comunidades locais através da coleta suste
     </div>
   );
 
-  // Create Post View
-  const CreatePost = () => (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-2xl">
-            <Edit className="h-6 w-6 mr-2" />
-            Criar Novo Post
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">Título do Post</label>
-            <Input
-              placeholder="Digite o título do seu post..."
-              value={newPost.title}
-              onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Resumo/Excerpt</label>
-            <Textarea
-              placeholder="Escreva um resumo atrativo do seu post..."
-              value={newPost.excerpt}
-              onChange={(e) => setNewPost({...newPost, excerpt: e.target.value})}
-              rows={3}
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Categoria</label>
-            <select 
-              className="w-full p-2 border border-gray-300 rounded-md"
-              value={newPost.category}
-              onChange={(e) => setNewPost({...newPost, category: e.target.value})}
-            >
-              <option value="descobertas">Descobertas</option>
-              <option value="pesquisa">Pesquisa</option>
-              <option value="conservacao">Conservação</option>
-              <option value="educacao">Educação</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Tags</label>
-            <div className="flex gap-2 mb-2">
-              <Input
-                placeholder="Digite uma tag..."
-                value={newPost.newTag}
-                onChange={(e) => setNewPost({...newPost, newTag: e.target.value})}
-                onKeyPress={(e) => e.key === 'Enter' && addTag()}
-              />
-              <Button onClick={addTag} variant="outline">Adicionar</Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {newPost.tags.map(tag => (
-                <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => removeTag(tag)}>
-                  {tag} <X className="h-3 w-3 ml-1" />
-                </Badge>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Conteúdo</label>
-            <Textarea
-              placeholder="Escreva o conteúdo completo do seu post..."
-              value={newPost.content}
-              onChange={(e) => setNewPost({...newPost, content: e.target.value})}
-              rows={15}
-            />
-          </div>
-          
-          <div className="flex gap-3">
-            <Button onClick={handleCreatePost} className="bg-green-600 hover:bg-green-700">
-              <Save className="h-4 w-4 mr-2" />
-              Publicar Post
-            </Button>
-            <Button variant="outline" onClick={() => setCurrentView('home')}>
-              Cancelar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  // Post Detail View
-  const PostDetail = () => (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      {selectedPost && (
-        <article>
-          <header className="mb-8">
-            <Button 
-              variant="ghost" 
-              onClick={() => setCurrentView('home')}
-              className="mb-4"
-            >
-              ← Voltar ao Blog
-            </Button>
-            
-            <Badge variant="outline" className="mb-4 capitalize">
-              {selectedPost.category}
-            </Badge>
-            
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              {selectedPost.title}
-            </h1>
-            
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={selectedPost.authorAvatar} />
-                  <AvatarFallback>{selectedPost.author.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold">{selectedPost.author}</p>
-                  <p className="text-gray-600 text-sm">{selectedPost.authorRole}</p>
-                  <p className="text-gray-500 text-sm">{selectedPost.publishDate}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Compartilhar
-                </Button>
-                <div className="flex items-center space-x-3 text-sm text-gray-500">
-                  <span className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
-                    {selectedPost.readTime}
-                  </span>
-                  <span className="flex items-center">
-                    <Eye className="h-4 w-4 mr-1" />
-                    {selectedPost.views}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 mb-6">
-              {selectedPost.tags.map(tag => (
-                <Badge key={tag} variant="secondary">
-                  <Tag className="h-3 w-3 mr-1" />
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </header>
-          
-          <div className="h-64 bg-gradient-to-r from-green-400 to-green-600 rounded-lg mb-8"></div>
-          
-          <div className="prose prose-lg max-w-none">
-            {selectedPost.content.split('\n\n').map((paragraph, index) => (
-              <p key={index} className="mb-4 text-gray-700 leading-relaxed">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-          
-          <footer className="mt-12 pt-8 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm">
-                  <Heart className="h-4 w-4 mr-2" />
-                  {selectedPost.likes} Curtidas
-                </Button>
-                <Button variant="outline" size="sm">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  {selectedPost.comments} Comentários
-                </Button>
-              </div>
-              <Button variant="outline" size="sm">
-                <Share2 className="h-4 w-4 mr-2" />
-                Compartilhar
-              </Button>
-            </div>
-          </footer>
-        </article>
-      )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <BlogHeader />
+      <BlogHeader currentView={currentView} setCurrentView={setCurrentView} />
       
       {currentView === 'home' && <BlogHome />}
-      {currentView === 'create' && <CreatePost />}
-      {currentView === 'post' && <PostDetail />}
+      {currentView === 'create' && (
+        <CreatePostForm 
+          onCreatePost={handleCreatePost}
+          onCancel={() => setCurrentView('home')}
+        />
+      )}
+      {currentView === 'post' && selectedPost && (
+        <PostDetail 
+          post={selectedPost}
+          onBack={() => setCurrentView('home')}
+          onUpdatePost={handleUpdatePost}
+        />
+      )}
     </div>
   );
 };
