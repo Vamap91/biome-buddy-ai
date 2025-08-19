@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -27,8 +27,9 @@ export function useDashboardStats() {
     recentActivity: [],
   });
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -105,6 +106,12 @@ export function useDashboardStats() {
         created_at: conv.created_at
       }));
 
+      console.log('Dashboard stats loaded:', { 
+        conversationsToday: conversationsToday?.length || 0,
+        totalMessages,
+        totalConversations: totalConversations?.length || 0 
+      });
+
       setStats({
         conversationsToday: conversationsToday?.length || 0,
         totalMessages,
@@ -117,14 +124,17 @@ export function useDashboardStats() {
       console.error('Error fetching dashboard stats:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchStats();
+      setInitialized(true);
     }
   }, [user]);
+
+  // Only fetch stats when user is available and not already initialized
+  useEffect(() => {
+    if (user && !initialized) {
+      console.log('Initializing dashboard stats for user:', user.id);
+      fetchStats();
+    }
+  }, [user, initialized, fetchStats]);
 
   return { stats, loading, refreshStats: fetchStats };
 }
