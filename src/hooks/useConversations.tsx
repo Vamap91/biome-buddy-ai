@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -24,6 +25,31 @@ export function useConversations() {
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+
+  // Função para processar arquivos
+  const processFiles = async (files: File[]): Promise<string> => {
+    let fileContents = '';
+    
+    for (const file of files) {
+      try {
+        if (file.type.includes('text') || file.name.endsWith('.txt')) {
+          const text = await file.text();
+          fileContents += `\n\n--- Conteúdo do arquivo: ${file.name} ---\n${text}\n--- Fim do arquivo ---\n\n`;
+        } else if (file.type.includes('image')) {
+          // Para imagens, incluir informações básicas
+          fileContents += `\n\n--- Imagem anexada: ${file.name} (${file.size} bytes, tipo: ${file.type}) ---\nPor favor, analise esta imagem.\n--- Fim do anexo ---\n\n`;
+        } else {
+          // Para outros tipos de arquivo
+          fileContents += `\n\n--- Arquivo anexado: ${file.name} (${file.size} bytes, tipo: ${file.type}) ---\nPor favor, analise este documento.\n--- Fim do anexo ---\n\n`;
+        }
+      } catch (error) {
+        console.error(`Erro ao processar arquivo ${file.name}:`, error);
+        fileContents += `\n\n--- Erro ao processar arquivo: ${file.name} ---\n\n`;
+      }
+    }
+    
+    return fileContents;
+  };
 
   // Fetch conversations with useCallback to prevent unnecessary re-renders
   const fetchConversations = useCallback(async () => {
@@ -150,8 +176,8 @@ export function useConversations() {
     }
   }, [user, fetchConversations, currentConversation]);
 
-  // Send message with useCallback
-  const sendMessage = useCallback(async (content: string, conversationId?: string) => {
+  // Send message with useCallback - agora aceita attachments
+  const sendMessage = useCallback(async (content: string, conversationId?: string, attachments?: File[]) => {
     if (!user) return;
 
     let activeConversationId = conversationId || currentConversation;
@@ -166,12 +192,19 @@ export function useConversations() {
         setCurrentConversation(activeConversationId);
       }
 
+      // Processar arquivos anexados se houver
+      let fullMessage = content;
+      if (attachments && attachments.length > 0) {
+        const fileContents = await processFiles(attachments);
+        fullMessage = content + fileContents;
+      }
+
       const { error: userMessageError } = await supabase
         .from('messages')
         .insert([
           {
             conversation_id: activeConversationId,
-            content,
+            content: fullMessage,
             role: 'user',
           },
         ]);
@@ -188,7 +221,7 @@ export function useConversations() {
         .eq('conversation_id', activeConversationId);
 
       if (!messagesError && existingMessages && existingMessages.length === 1) {
-        // This is the first message, update the conversation title
+        // This is the first message, update the conversation title using original content (not fullMessage)
         const titleFromMessage = content.length > 50 ? content.substring(0, 50) + '...' : content;
         await supabase
           .from('conversations')
@@ -203,7 +236,7 @@ export function useConversations() {
       }
 
       const { data: aiData, error: aiError } = await supabase.functions.invoke('chat-ai', {
-        body: { message: content }
+        body: { message: fullMessage }
       });
 
       let aiResponse = '';

@@ -30,7 +30,7 @@ interface Message {
 
 interface ChatInterfaceProps {
   messages?: Message[];
-  onSendMessage?: (message: string) => void;
+  onSendMessage?: (message: string, attachments?: File[]) => void;
   isProcessing?: boolean;
   className?: string;
 }
@@ -47,8 +47,8 @@ const ChatInterface = ({
   const { t } = useLanguage();
 
   const handleSendMessage = () => {
-    if (inputValue.trim() && onSendMessage && !isProcessing) {
-      onSendMessage(inputValue);
+    if ((inputValue.trim() || attachedFiles.length > 0) && onSendMessage && !isProcessing) {
+      onSendMessage(inputValue || "Analise o anexo enviado", attachedFiles);
       setInputValue("");
       setAttachedFiles([]);
     }
@@ -68,6 +68,8 @@ const ChatInterface = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setAttachedFiles(prev => [...prev, ...files]);
+    // Reset the input to allow selecting the same file again
+    e.target.value = '';
   };
 
   const removeFile = (index: number) => {
@@ -206,7 +208,7 @@ const ChatInterface = ({
               ref={fileInputRef}
               type="file"
               multiple
-              accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+              accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.xls,.xlsx,.ppt,.pptx"
               onChange={handleFileSelect}
               className="hidden"
             />
@@ -239,7 +241,7 @@ const ChatInterface = ({
 
             <Button 
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isProcessing}
+              disabled={(!inputValue.trim() && attachedFiles.length === 0) || isProcessing}
               className="bg-hero-gradient hover:opacity-90 text-white"
             >
               {isProcessing ? (

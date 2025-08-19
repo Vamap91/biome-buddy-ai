@@ -65,8 +65,8 @@ const ChatWithSidebar = () => {
     }
   };
 
-  const handleSendMessage = async (content: string) => {
-    await sendMessage(content, currentConversation || undefined);
+  const handleSendMessage = async (content: string, attachments?: File[]) => {
+    await sendMessage(content, currentConversation || undefined, attachments);
   };
 
   return (
