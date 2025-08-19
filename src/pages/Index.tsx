@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -53,8 +52,8 @@ const Index = () => {
     },
     {
       icon: <Globe className="h-6 w-6" />,
-      title: "API Pública",
-      description: "Integre o Dr_C em suas aplicações com nossa API robusta"
+      title: "Recursos Educacionais",
+      description: "Materiais didáticos e ferramentas para educadores"
     }
   ];
 
@@ -142,7 +141,6 @@ const Index = () => {
             <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">Recursos</a>
             <a href="#testimonials" className="text-muted-foreground hover:text-primary transition-colors">Depoimentos</a>
             <a href="#pricing" className="text-muted-foreground hover:text-primary transition-colors">Planos</a>
-            <a href="#api" className="text-muted-foreground hover:text-primary transition-colors">API</a>
           </nav>
 
           <div className="flex items-center space-x-3">
@@ -362,41 +360,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* API Section */}
-      <section id="api" className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Integre o <span className="text-gradient">Dr_C</span> em suas aplicações
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Nossa API RESTful permite que você acesse todo o conhecimento do Dr_C em seus próprios projetos
-            </p>
-            
-            <Card className="text-left mb-8 bg-card-gradient">
-              <CardContent className="p-6">
-                <div className="bg-muted/50 rounded-lg p-4 font-mono text-sm">
-                  <div className="text-primary">curl -X POST https://api.drc.bio/v2/chat/message \</div>
-                  <div className="text-muted-foreground">  -H "Authorization: Bearer YOUR_API_KEY" \</div>
-                  <div className="text-muted-foreground">  -H "Content-Type: application/json" \</div>
-                  <div className="text-muted-foreground">  -d '{"{"}"message": "Como as abelhas ajudam na polinização?"{"}"}'</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-hero-gradient hover:opacity-90">
-                Ver Documentação
-                <ChevronRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button variant="outline" size="lg">
-                Obter API Key
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Final */}
       <section className="py-20 bg-hero-gradient text-white">
         <div className="container mx-auto px-4 text-center">
@@ -444,8 +407,8 @@ const Index = () => {
               <ul className="space-y-2 text-muted-foreground">
                 <li><a href="#features" className="hover:text-primary transition-colors">Recursos</a></li>
                 <li><a href="#pricing" className="hover:text-primary transition-colors">Planos</a></li>
-                <li><a href="#api" className="hover:text-primary transition-colors">API</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Integrações</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Atualizações</a></li>
               </ul>
             </div>
 
