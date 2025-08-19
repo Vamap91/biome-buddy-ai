@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,7 +47,16 @@ const Login = () => {
     const { error } = await signIn(formData.email, formData.password);
     
     if (error) {
-      setError("Email ou senha incorretos");
+      console.log("Erro de login:", error);
+      
+      // Verificar se o erro é de email não confirmado
+      if (error.message?.includes("Email not confirmed") || error.code === "email_not_confirmed") {
+        setError("Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada e spam.");
+      } else if (error.message?.includes("Invalid login credentials")) {
+        setError("Email ou senha incorretos");
+      } else {
+        setError("Erro ao fazer login. Tente novamente.");
+      }
     } else {
       toast({
         title: "Login realizado com sucesso!",
@@ -76,12 +86,20 @@ const Login = () => {
     const { error } = await signUp(formData.email, formData.password, formData.fullName);
     
     if (error) {
-      setError(error.message || "Erro ao criar conta");
+      console.log("Erro de cadastro:", error);
+      
+      if (error.message?.includes("User already registered")) {
+        setError("Este email já está cadastrado. Tente fazer login ou use outro email.");
+      } else {
+        setError(error.message || "Erro ao criar conta");
+      }
     } else {
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta",
+        description: "Verifique seu email para confirmar a conta antes de fazer login",
       });
+      // Limpar o formulário após sucesso
+      setFormData({ email: "", password: "", fullName: "" });
     }
     
     setLoading(false);
