@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
+import Games from "./pages/Games";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Chat />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/games" 
+                element={
+                  <ProtectedRoute>
+                    <Games />
                   </ProtectedRoute>
                 } 
               />
