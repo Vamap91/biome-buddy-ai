@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface LanguageContextType {
@@ -64,7 +63,11 @@ const translations = {
     tryAgainLater: 'Tente novamente mais tarde.',
     historyCleared: 'Histórico limpo com sucesso!',
     allConversationsRemoved: 'Todas as conversas foram removidas.',
-    errorClearingHistory: 'Erro ao limpar histórico'
+    errorClearingHistory: 'Erro ao limpar histórico',
+    processing: 'Processando...',
+    aiThinking: 'Dr_C está pensando...',
+    chatPlaceholder: 'Digite sua pergunta sobre biodiversidade...',
+    enterToSend: 'Pressione Enter para enviar, Shift+Enter para nova linha',
   },
   en: {
     welcome: 'Welcome',
@@ -121,7 +124,11 @@ const translations = {
     tryAgainLater: 'Please try again later.',
     historyCleared: 'History cleared successfully!',
     allConversationsRemoved: 'All conversations have been removed.',
-    errorClearingHistory: 'Error clearing history'
+    errorClearingHistory: 'Error clearing history',
+    processing: 'Processing...',
+    aiThinking: 'Dr_C is thinking...',
+    chatPlaceholder: 'Type your question about biodiversity...',
+    enterToSend: 'Press Enter to send, Shift+Enter for new line',
   }
 };
 

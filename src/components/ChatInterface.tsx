@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,11 @@ import {
   Share2,
   Bot,
   User,
-  Loader2
+  Loader2,
+  File
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface Message {
   id: string;
@@ -40,11 +42,15 @@ const ChatInterface = ({
   className = "" 
 }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
 
   const handleSendMessage = () => {
     if (inputValue.trim() && onSendMessage && !isProcessing) {
       onSendMessage(inputValue);
       setInputValue("");
+      setAttachedFiles([]);
     }
   };
 
@@ -53,6 +59,19 @@ const ChatInterface = ({
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleFileAttach = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -67,7 +86,7 @@ const ChatInterface = ({
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-success rounded-full"></div>
               <span className="text-sm text-muted-foreground">
-                {isProcessing ? 'Processando...' : 'Online'}
+                {isProcessing ? t('processing') : 'Online'}
               </span>
             </div>
           </div>
@@ -153,7 +172,7 @@ const ChatInterface = ({
               <div className="bg-muted p-3 rounded-2xl">
                 <div className="flex items-center space-x-2">
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  <span className="text-sm">Dr_C está pensando...</span>
+                  <span className="text-sm">{t('aiThinking')}</span>
                 </div>
               </div>
             </div>
@@ -162,14 +181,47 @@ const ChatInterface = ({
 
         {/* Área de input */}
         <div className="border-t border-border/40 p-4">
+          {/* Arquivos anexados */}
+          {attachedFiles.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {attachedFiles.map((file, index) => (
+                <div key={index} className="flex items-center gap-2 bg-muted px-3 py-1 rounded-lg text-sm">
+                  <File className="h-3 w-3" />
+                  <span className="truncate max-w-32">{file.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                    onClick={() => removeFile(index)}
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-muted-foreground"
+              onClick={handleFileAttach}
+            >
               <Paperclip className="h-4 w-4" />
             </Button>
             
             <div className="flex-1 relative">
               <Input
-                placeholder="Digite sua pergunta sobre biodiversidade..."
+                placeholder={t('chatPlaceholder')}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -198,9 +250,8 @@ const ChatInterface = ({
             </Button>
           </div>
           
-          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-            <span>Pressione Enter para enviar, Shift+Enter para nova linha</span>
-            <span>Powered by OpenAI GPT-4</span>
+          <div className="flex items-center justify-start mt-2 text-xs text-muted-foreground">
+            <span>{t('enterToSend')}</span>
           </div>
         </div>
       </CardContent>
