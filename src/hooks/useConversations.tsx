@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -182,6 +181,23 @@ export function useConversations() {
         return;
       }
 
+      // Check if this is the first message in the conversation
+      const { data: existingMessages, error: messagesError } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('conversation_id', activeConversationId);
+
+      if (!messagesError && existingMessages && existingMessages.length === 1) {
+        // This is the first message, update the conversation title
+        const titleFromMessage = content.length > 50 ? content.substring(0, 50) + '...' : content;
+        await supabase
+          .from('conversations')
+          .update({ title: titleFromMessage })
+          .eq('id', activeConversationId);
+        
+        console.log('Updated conversation title to:', titleFromMessage);
+      }
+
       if (activeConversationId) {
         await fetchMessages(activeConversationId);
       }
@@ -212,16 +228,8 @@ export function useConversations() {
           },
         ]);
 
-      const currentConv = conversations.find(c => c.id === activeConversationId);
-      if (currentConv?.title === 'Nova Conversa') {
-        const titlePrompt = content.length > 50 ? content.substring(0, 50) + '...' : content;
-        await supabase
-          .from('conversations')
-          .update({ title: titlePrompt })
-          .eq('id', activeConversationId);
-        
-        await fetchConversations();
-      }
+      // Refresh conversations to update the sidebar with the new title
+      await fetchConversations();
 
       if (activeConversationId) {
         await fetchMessages(activeConversationId);
@@ -232,7 +240,7 @@ export function useConversations() {
     } finally {
       setIsProcessing(false);
     }
-  }, [user, currentConversation, createConversation, fetchMessages, conversations, fetchConversations]);
+  }, [user, currentConversation, createConversation, fetchMessages, fetchConversations]);
 
   // Only fetch conversations when user is available and not already initialized
   useEffect(() => {
