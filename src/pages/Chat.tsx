@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useConversations } from '@/hooks/useConversations';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,8 +11,20 @@ import {
   LogOut, 
   User,
   Bot,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const Chat = () => {
   const { user, signOut } = useAuth();
@@ -25,7 +36,10 @@ const Chat = () => {
     setCurrentConversation,
     createConversation,
     sendMessage,
+    deleteConversation,
   } = useConversations();
+
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
 
   const handleNewChat = async () => {
     const newConversation = await createConversation();
@@ -36,6 +50,14 @@ const Chat = () => {
 
   const handleSendMessage = async (content: string) => {
     await sendMessage(content, currentConversation || undefined);
+  };
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    const success = await deleteConversation(conversationId);
+    if (success) {
+      console.log('Conversa deletada com sucesso');
+    }
+    setConversationToDelete(null);
   };
 
   // Convert messages to ChatInterface format
@@ -83,15 +105,49 @@ const Chat = () => {
         <ScrollArea className="flex-1">
           <div className="p-2">
             {conversations.map((conversation) => (
-              <Button
+              <div
                 key={conversation.id}
-                variant={currentConversation === conversation.id ? "secondary" : "ghost"}
-                className="w-full justify-start mb-1 h-auto py-2"
-                onClick={() => setCurrentConversation(conversation.id)}
+                className="flex items-center mb-1 group"
               >
-                <MessageSquare className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="truncate text-left">{conversation.title}</span>
-              </Button>
+                <Button
+                  variant={currentConversation === conversation.id ? "secondary" : "ghost"}
+                  className="flex-1 justify-start h-auto py-2 mr-1"
+                  onClick={() => setCurrentConversation(conversation.id)}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="truncate text-left">{conversation.title}</span>
+                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setConversationToDelete(conversation.id)}
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Deletar Conversa</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tem certeza que deseja deletar esta conversa? Esta ação não pode ser desfeita.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDeleteConversation(conversation.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Deletar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             ))}
             
             {conversations.length === 0 && (

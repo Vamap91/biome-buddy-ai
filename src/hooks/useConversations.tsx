@@ -103,6 +103,49 @@ export function useConversations() {
     }
   };
 
+  // Delete conversation
+  const deleteConversation = async (conversationId: string) => {
+    if (!user) return false;
+
+    try {
+      // First delete all messages in the conversation
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        return false;
+      }
+
+      // Then delete the conversation
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId);
+
+      if (conversationError) {
+        console.error('Error deleting conversation:', conversationError);
+        return false;
+      }
+
+      // Update local state
+      await fetchConversations();
+      
+      // If we deleted the current conversation, clear it
+      if (currentConversation === conversationId) {
+        setCurrentConversation(null);
+        setMessages([]);
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Unexpected error deleting conversation:', err);
+      return false;
+    }
+  };
+
   // Send message with OpenAI integration
   const sendMessage = async (content: string, conversationId?: string) => {
     if (!user) return;
@@ -214,5 +257,6 @@ export function useConversations() {
     createConversation,
     sendMessage,
     fetchConversations,
+    deleteConversation,
   };
 }
