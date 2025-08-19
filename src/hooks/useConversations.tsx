@@ -60,7 +60,14 @@ export function useConversations() {
       if (error) {
         console.error('Error fetching messages:', error);
       } else {
-        setMessages(data || []);
+        // Type cast the data to ensure role is properly typed
+        const typedMessages: Message[] = (data || []).map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          role: msg.role as 'user' | 'assistant',
+          created_at: msg.created_at
+        }));
+        setMessages(typedMessages);
       }
     } catch (err) {
       console.error('Unexpected error fetching messages:', err);
