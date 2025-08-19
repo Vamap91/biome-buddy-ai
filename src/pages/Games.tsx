@@ -73,11 +73,52 @@ const GamesPage = () => {
     return null;
   };
 
+  // AI Logic for Tic Tac Toe
+  const makeAIMove = (board) => {
+    // Check if AI can win
+    for (let i = 0; i < 9; i++) {
+      if (!board[i]) {
+        const testBoard = [...board];
+        testBoard[i] = '🏭';
+        if (checkTicTacToeWinner(testBoard) === '🏭') {
+          return i;
+        }
+      }
+    }
+
+    // Check if AI needs to block player
+    for (let i = 0; i < 9; i++) {
+      if (!board[i]) {
+        const testBoard = [...board];
+        testBoard[i] = '🌱';
+        if (checkTicTacToeWinner(testBoard) === '🌱') {
+          return i;
+        }
+      }
+    }
+
+    // Take center if available
+    if (!board[4]) {
+      return 4;
+    }
+
+    // Take corners
+    const corners = [0, 2, 6, 8];
+    const availableCorners = corners.filter(corner => !board[corner]);
+    if (availableCorners.length > 0) {
+      return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+    }
+
+    // Take any available spot
+    const availableSpots = board.map((cell, index) => cell === null ? index : null).filter(spot => spot !== null);
+    return availableSpots[Math.floor(Math.random() * availableSpots.length)];
+  };
+
   const handleTicTacToeClick = (index) => {
-    if (ticBoard[index] || ticWinner || ticGameOver) return;
+    if (ticBoard[index] || ticWinner || ticGameOver || !ticIsPlayerTurn) return;
     
     const newBoard = [...ticBoard];
-    newBoard[index] = ticIsPlayerTurn ? '🌱' : '🏭';
+    newBoard[index] = '🌱'; // Player is always 🌱
     setTicBoard(newBoard);
     
     const winner = checkTicTacToeWinner(newBoard);
@@ -87,9 +128,35 @@ const GamesPage = () => {
     } else if (newBoard.every(cell => cell !== null)) {
       setTicGameOver(true);
     } else {
-      setTicIsPlayerTurn(!ticIsPlayerTurn);
+      setTicIsPlayerTurn(false); // Switch to AI turn
     }
   };
+
+  // AI Move Effect
+  useEffect(() => {
+    if (!ticIsPlayerTurn && !ticWinner && !ticGameOver) {
+      const timer = setTimeout(() => {
+        const aiMoveIndex = makeAIMove(ticBoard);
+        if (aiMoveIndex !== undefined) {
+          const newBoard = [...ticBoard];
+          newBoard[aiMoveIndex] = '🏭';
+          setTicBoard(newBoard);
+          
+          const winner = checkTicTacToeWinner(newBoard);
+          if (winner) {
+            setTicWinner(winner);
+            setTicGameOver(true);
+          } else if (newBoard.every(cell => cell !== null)) {
+            setTicGameOver(true);
+          } else {
+            setTicIsPlayerTurn(true); // Switch back to player
+          }
+        }
+      }, 800); // AI thinks for 800ms
+
+      return () => clearTimeout(timer);
+    }
+  }, [ticIsPlayerTurn, ticBoard, ticWinner, ticGameOver]);
 
   const resetTicTacToe = () => {
     setTicBoard(Array(9).fill(null));
@@ -233,6 +300,20 @@ const GamesPage = () => {
             <ArrowLeft className="h-4 w-4" />
             <span>{t('goBack')}</span>
           </Button>
+          <div className="flex items-center space-x-2">
+            <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+            <Button onClick={() => navigate('/blog')} variant="outline" size="sm">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Blog
+            </Button>
+            <Button onClick={() => navigate('/settings')} variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Configurações
+            </Button>
+          </div>
           <h2 className="text-2xl font-bold text-primary">🌳 {t('ecoTicTacToe')}</h2>
           <Button onClick={resetTicTacToe} variant="outline" size="sm">
             <RotateCcw className="h-4 w-4 mr-2" />
@@ -243,9 +324,16 @@ const GamesPage = () => {
         <Card className="p-6">
           <div className="text-center mb-6">
             {!ticGameOver ? (
-              <p className="text-lg">
-                {t('turnOf')}: <span className="font-bold">{ticIsPlayerTurn ? `🌱 ${t('you')}` : `🏭 ${t('ai')}`}</span>
-              </p>
+              <div className="space-y-2">
+                <p className="text-lg">
+                  {t('turnOf')}: <span className="font-bold">{ticIsPlayerTurn ? `🌱 ${t('you')}` : `🏭 ${t('ai')}`}</span>
+                </p>
+                {!ticIsPlayerTurn && (
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    🤖 IA está pensando...
+                  </p>
+                )}
+              </div>
             ) : ticWinner ? (
               <div className="space-y-4">
                 <p className="text-xl font-bold text-success">
@@ -268,8 +356,12 @@ const GamesPage = () => {
               <button
                 key={index}
                 onClick={() => handleTicTacToeClick(index)}
-                className="w-20 h-20 bg-card border-2 border-border rounded-lg text-3xl hover:bg-accent transition-colors flex items-center justify-center"
-                disabled={ticGameOver}
+                className={`w-20 h-20 bg-card border-2 border-border rounded-lg text-3xl transition-colors flex items-center justify-center ${
+                  ticGameOver || !ticIsPlayerTurn 
+                    ? 'cursor-not-allowed opacity-50' 
+                    : 'hover:bg-accent cursor-pointer'
+                }`}
+                disabled={ticGameOver || !ticIsPlayerTurn || cell !== null}
               >
                 {cell}
               </button>
