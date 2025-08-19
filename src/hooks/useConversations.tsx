@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -23,6 +22,7 @@ export function useConversations() {
   const [currentConversation, setCurrentConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Fetch conversations
   const fetchConversations = async () => {
@@ -103,13 +103,15 @@ export function useConversations() {
     }
   };
 
-  // Send message
+  // Send message with OpenAI integration
   const sendMessage = async (content: string, conversationId?: string) => {
     if (!user) return;
 
     let activeConversationId = conversationId || currentConversation;
 
     try {
+      setIsProcessing(true);
+
       // Create conversation if none exists
       if (!activeConversationId) {
         const newConversation = await createConversation();
@@ -139,32 +141,54 @@ export function useConversations() {
         await fetchMessages(activeConversationId);
       }
 
-      // Simulate AI response (you can replace this with actual AI integration)
-      setTimeout(async () => {
-        try {
-          const aiResponse = `Obrigado pela sua pergunta sobre "${content}". Como Dr_C v2.0, posso ajudá-lo com informações sobre biodiversidade. Esta é uma resposta simulada que será substituída pela integração real com IA.`;
+      // Call OpenAI API through edge function
+      const { data: aiData, error: aiError } = await supabase.functions.invoke('chat-ai', {
+        body: { message: content }
+      });
 
-          await supabase
-            .from('messages')
-            .insert([
-              {
-                conversation_id: activeConversationId,
-                content: aiResponse,
-                role: 'assistant',
-              },
-            ]);
+      let aiResponse = '';
+      
+      if (aiError) {
+        console.error('Error calling AI function:', aiError);
+        aiResponse = 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.';
+      } else if (aiData?.response) {
+        aiResponse = aiData.response;
+      } else {
+        console.error('No response from AI function:', aiData);
+        aiResponse = 'Desculpe, não consegui processar sua mensagem no momento. Tente novamente.';
+      }
 
-          // Refresh messages
-          if (activeConversationId) {
-            await fetchMessages(activeConversationId);
-          }
-        } catch (err) {
-          console.error('Error sending AI response:', err);
-        }
-      }, 1500);
+      // Add AI response to database
+      await supabase
+        .from('messages')
+        .insert([
+          {
+            conversation_id: activeConversationId,
+            content: aiResponse,
+            role: 'assistant',
+          },
+        ]);
+
+      // Update conversation title if it's a new conversation
+      if (conversations.find(c => c.id === activeConversationId)?.title === 'Nova Conversa') {
+        const titlePrompt = content.length > 50 ? content.substring(0, 50) + '...' : content;
+        await supabase
+          .from('conversations')
+          .update({ title: titlePrompt })
+          .eq('id', activeConversationId);
+        
+        await fetchConversations();
+      }
+
+      // Refresh messages with AI response
+      if (activeConversationId) {
+        await fetchMessages(activeConversationId);
+      }
 
     } catch (err) {
       console.error('Unexpected error sending message:', err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -185,6 +209,7 @@ export function useConversations() {
     messages,
     currentConversation,
     loading,
+    isProcessing,
     setCurrentConversation,
     createConversation,
     sendMessage,

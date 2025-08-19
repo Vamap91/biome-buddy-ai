@@ -6,13 +6,13 @@ import ChatInterface from '@/components/ChatInterface';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { 
   Plus, 
   MessageSquare, 
   LogOut, 
   User,
-  Bot
+  Bot,
+  Loader2
 } from 'lucide-react';
 
 const Chat = () => {
@@ -21,6 +21,7 @@ const Chat = () => {
     conversations,
     messages,
     currentConversation,
+    isProcessing,
     setCurrentConversation,
     createConversation,
     sendMessage,
@@ -110,6 +111,7 @@ const Chat = () => {
           <ChatInterface
             messages={chatMessages}
             onSendMessage={handleSendMessage}
+            isProcessing={isProcessing}
             className="flex-1"
           />
         ) : (
@@ -123,7 +125,7 @@ const Chat = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Seu assistente especializado em biodiversidade. 
+                  Seu assistente especializado em biodiversidade com IA real da OpenAI. 
                   Selecione uma conversa existente ou inicie um novo chat.
                 </p>
                 <Button onClick={handleNewChat} className="bg-hero-gradient">

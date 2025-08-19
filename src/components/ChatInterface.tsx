@@ -12,9 +12,9 @@ import {
   MoreVertical, 
   Star,
   Share2,
-  Download,
   Bot,
-  User
+  User,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,52 +29,22 @@ interface Message {
 interface ChatInterfaceProps {
   messages?: Message[];
   onSendMessage?: (message: string) => void;
+  isProcessing?: boolean;
   className?: string;
 }
 
 const ChatInterface = ({ 
   messages = [], 
   onSendMessage,
+  isProcessing = false,
   className = "" 
 }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-
-  // Mensagens de exemplo
-  const defaultMessages: Message[] = [
-    {
-      id: '1',
-      content: 'Olá! Eu sou o Dr_C v2.0, seu assistente especializado em biodiversidade. Como posso ajudá-lo hoje?',
-      sender: 'dr_c',
-      timestamp: new Date(Date.now() - 5000)
-    },
-    {
-      id: '2',
-      content: 'Gostaria de saber mais sobre o papel das abelhas na polinização e como isso afeta a biodiversidade.',
-      sender: 'user',
-      timestamp: new Date(Date.now() - 3000)
-    },
-    {
-      id: '3',
-      content: 'Excelente pergunta! As abelhas são polinizadores fundamentais para a manutenção da biodiversidade. Elas visitam aproximadamente 80% das plantas com flores do mundo, facilitando a reprodução sexual das plantas através da transferência de pólen...',
-      sender: 'dr_c',
-      timestamp: new Date(Date.now() - 1000),
-      rating: 5
-    }
-  ];
-
-  const displayMessages = messages.length > 0 ? messages : defaultMessages;
 
   const handleSendMessage = () => {
-    if (inputValue.trim() && onSendMessage) {
+    if (inputValue.trim() && onSendMessage && !isProcessing) {
       onSendMessage(inputValue);
       setInputValue("");
-      setIsTyping(true);
-      
-      // Simular resposta do bot
-      setTimeout(() => {
-        setIsTyping(false);
-      }, 2000);
     }
   };
 
@@ -96,7 +66,9 @@ const ChatInterface = ({
             <CardTitle className="text-lg">Dr_C v2.0</CardTitle>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-success rounded-full"></div>
-              <span className="text-sm text-muted-foreground">Online</span>
+              <span className="text-sm text-muted-foreground">
+                {isProcessing ? 'Processando...' : 'Online'}
+              </span>
             </div>
           </div>
         </div>
@@ -108,7 +80,25 @@ const ChatInterface = ({
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Área de mensagens */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {displayMessages.map((message) => (
+          {messages.length === 0 && (
+            <div className="flex items-start space-x-3">
+              <Avatar className="w-8 h-8">
+                <div className="w-8 h-8 bg-hero-gradient rounded-full flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-white" />
+                </div>
+              </Avatar>
+              <div className="flex-1 max-w-[80%]">
+                <div className="inline-block p-3 rounded-2xl text-sm bg-muted">
+                  Olá! Eu sou o Dr_C v2.0, seu assistente especializado em biodiversidade com IA da OpenAI. Como posso ajudá-lo hoje?
+                </div>
+                <div className="flex items-center space-x-2 mt-2 text-xs text-muted-foreground">
+                  <span>Agora</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {messages.map((message) => (
             <div
               key={message.id}
               className={cn(
@@ -146,7 +136,6 @@ const ChatInterface = ({
                   {message.content}
                 </div>
 
-                {/* Ações da mensagem */}
                 <div className={cn(
                   "flex items-center space-x-2 mt-2 text-xs text-muted-foreground",
                   message.sender === 'user' ? 'justify-end' : 'justify-start'
@@ -166,20 +155,13 @@ const ChatInterface = ({
                       </Button>
                     </>
                   )}
-                  
-                  {message.rating && (
-                    <Badge variant="secondary" className="bg-success/10 text-success">
-                      <Star className="h-3 w-3 mr-1 fill-current" />
-                      {message.rating}
-                    </Badge>
-                  )}
                 </div>
               </div>
             </div>
           ))}
 
-          {/* Indicador de digitação */}
-          {isTyping && (
+          {/* Indicador de processamento */}
+          {isProcessing && (
             <div className="flex items-start space-x-3">
               <Avatar className="w-8 h-8">
                 <div className="w-8 h-8 bg-hero-gradient rounded-full flex items-center justify-center">
@@ -187,10 +169,9 @@ const ChatInterface = ({
                 </div>
               </Avatar>
               <div className="bg-muted p-3 rounded-2xl">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm">Dr_C está pensando...</span>
                 </div>
               </div>
             </div>
@@ -210,6 +191,7 @@ const ChatInterface = ({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
+                disabled={isProcessing}
                 className="pr-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
               />
               <Button 
@@ -223,16 +205,20 @@ const ChatInterface = ({
 
             <Button 
               onClick={handleSendMessage}
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim() || isProcessing}
               className="bg-hero-gradient hover:opacity-90 text-white"
             >
-              <Send className="h-4 w-4" />
+              {isProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </div>
           
           <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
             <span>Pressione Enter para enviar, Shift+Enter para nova linha</span>
-            <span>Powered by GPT-4</span>
+            <span>Powered by OpenAI GPT-4</span>
           </div>
         </div>
       </CardContent>
