@@ -1,5 +1,6 @@
 
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,36 +10,35 @@ import {
   Settings, 
   Bell, 
   Search,
-  TrendingUp,
-  Users,
   Bot,
-  BarChart,
   User,
   LogOut,
-  Zap
+  Zap,
+  Globe
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage();
 
   const stats = [
     {
-      title: 'Conversas Hoje',
+      title: t('conversationsToday'),
       value: '12',
       change: '+8%',
       icon: MessageSquare,
       color: 'text-blue-600'
     },
     {
-      title: 'Queries Realizadas',
+      title: t('queriesPerformed'),
       value: '847',
       change: '+23%',
       icon: Bot,
       color: 'text-green-600'
     },
     {
-      title: 'Tokens Utilizados',
+      title: t('tokensUsed'),
       value: '45.2K',
       change: '+12%',
       icon: Zap,
@@ -59,6 +59,15 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggleLanguage}
+              className="flex items-center gap-2"
+            >
+              <Globe className="h-4 w-4" />
+              {language === 'pt' ? 'EN' : 'PT'}
+            </Button>
             <Button variant="ghost" size="sm">
               <Search className="h-4 w-4" />
             </Button>
@@ -74,9 +83,9 @@ const Dashboard = () => {
               </Avatar>
               <div className="hidden md:block">
                 <p className="text-sm font-medium">
-                  {user?.user_metadata?.full_name || user?.email || 'Usuário'}
+                  {user?.user_metadata?.full_name || user?.email || t('user')}
                 </p>
-                <p className="text-xs text-muted-foreground">Online</p>
+                <p className="text-xs text-muted-foreground">{t('online')}</p>
               </div>
             </div>
           </div>
@@ -89,23 +98,19 @@ const Dashboard = () => {
           <nav className="p-4 space-y-2">
             <div className="space-y-1">
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Principal</h3>
-              <Button variant="secondary" className="w-full justify-start">
-                <BarChart className="mr-2 h-4 w-4" />
-                Dashboard
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" asChild>
-                <Link to="/chat">
+              <Button variant="ghost" className="w-full justify-start">
+                <Link to="/chat" className="flex items-center w-full">
                   <MessageSquare className="mr-2 h-4 w-4" />
-                  Chat IA
+                  {t('chatAI')}
                 </Link>
               </Button>
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">Configurações</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">{t('settings')}</h3>
               <Button variant="ghost" className="w-full justify-start">
                 <Settings className="mr-2 h-4 w-4" />
-                Configurações
+                {t('settings')}
               </Button>
               <Button 
                 variant="ghost" 
@@ -113,7 +118,7 @@ const Dashboard = () => {
                 onClick={signOut}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Sair
+                {t('logout')}
               </Button>
             </div>
           </nav>
@@ -125,15 +130,15 @@ const Dashboard = () => {
             {/* Welcome Section */}
             <div className="bg-hero-gradient rounded-xl p-6 text-white">
               <h2 className="text-2xl font-bold mb-2">
-                Bem-vindo, {user?.user_metadata?.full_name?.split(' ')[0] || 'Usuário'}!
+                {t('welcome')}, {user?.user_metadata?.full_name?.split(' ')[0] || t('user')}!
               </h2>
               <p className="text-white/80 mb-4">
-                Pronto para explorar a biodiversidade com IA avançada?
+                {t('readyToExplore')}
               </p>
-              <Button variant="secondary" asChild>
-                <Link to="/chat">
+              <Button variant="secondary">
+                <Link to="/chat" className="flex items-center">
                   <MessageSquare className="mr-2 h-4 w-4" />
-                  Iniciar Nova Conversa
+                  {t('startNewConversation')}
                 </Link>
               </Button>
             </div>
@@ -162,7 +167,7 @@ const Dashboard = () => {
             <div className="grid gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Atividade Recente</CardTitle>
+                  <CardTitle>{t('recentActivity')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -200,7 +205,7 @@ const Dashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Estatísticas Rápidas</CardTitle>
+                  <CardTitle>{t('quickStats')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
