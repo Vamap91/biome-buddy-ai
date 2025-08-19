@@ -19,8 +19,7 @@ import {
   Filter,
   Download,
   BarChart3,
-  Globe,
-  Brain
+  Globe
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -39,8 +38,6 @@ const Dashboard = () => {
             
             <div className="hidden md:flex items-center space-x-1 ml-8">
               <Button variant="ghost" size="sm">Dashboard</Button>
-              <Button variant="ghost" size="sm">Chat</Button>
-              <Button variant="ghost" size="sm">Biblioteca</Button>
               <Button variant="ghost" size="sm">Analytics</Button>
             </div>
           </div>
@@ -89,18 +86,10 @@ const Dashboard = () => {
               <MessageCircle className="mr-2 h-4 w-4" />
               Chat Dr_C
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <BookOpen className="mr-2 h-4 w-4" />
-              Biblioteca
-            </Button>
 
             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-6">
               Ferramentas
             </div>
-            <Button variant="ghost" className="w-full justify-start">
-              <Brain className="mr-2 h-4 w-4" />
-              Análise IA
-            </Button>
             <Button variant="ghost" className="w-full justify-start">
               <Globe className="mr-2 h-4 w-4" />
               API
@@ -151,7 +140,7 @@ const Dashboard = () => {
           </div>
 
           {/* Métricas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <MetricCard
               title="Conversas este mês"
               value="47"
@@ -164,27 +153,13 @@ const Dashboard = () => {
               icon={<BookOpen className="h-4 w-4" />}
               trend={{ value: 8, label: "esta semana" }}
             />
-            <MetricCard
-              title="Tempo de estudo"
-              value="24h"
-              icon={<Brain className="h-4 w-4" />}
-              trend={{ value: -5, label: "vs semana anterior" }}
-            />
-            <MetricCard
-              title="Satisfaction Score"
-              value="4.8"
-              icon={<TrendingUp className="h-4 w-4" />}
-              trend={{ value: 12, label: "pontos" }}
-            />
           </div>
 
           {/* Tabs de Conteúdo */}
           <Tabs defaultValue="overview" className="space-y-6">
             <div className="flex items-center justify-between">
-              <TabsList className="grid w-[400px] grid-cols-3">
+              <TabsList className="grid w-[200px] grid-cols-1">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-                <TabsTrigger value="chat">Chat</TabsTrigger>
-                <TabsTrigger value="library">Biblioteca</TabsTrigger>
               </TabsList>
               
               <div className="flex items-center space-x-2">
@@ -281,35 +256,6 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            <TabsContent value="chat" className="space-y-6">
-              <div className="max-w-4xl">
-                <ChatInterface />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="library" className="space-y-6">
-              <Card className="bg-card-gradient border-0 shadow-soft">
-                <CardHeader>
-                  <CardTitle>Biblioteca de Conhecimento</CardTitle>
-                  <CardDescription>
-                    Explore recursos, artigos e documentos sobre biodiversidade
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Biblioteca em Construção</h3>
-                    <p className="text-muted-foreground mb-4">
-                      A biblioteca completa estará disponível em breve com milhares de recursos.
-                    </p>
-                    <Button className="bg-hero-gradient hover:opacity-90">
-                      Ser Notificado
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </main>
