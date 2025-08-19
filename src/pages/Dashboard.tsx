@@ -1,265 +1,281 @@
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import MetricCard from "@/components/MetricCard";
-import ChatInterface from "@/components/ChatInterface";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
-  Users, 
-  MessageCircle, 
+  Lightbulb, 
+  Home, 
+  MessageSquare, 
   BookOpen, 
-  TrendingUp,
+  User, 
+  Settings, 
+  LogOut,
+  Upload,
+  BarChart,
+  Brain,
   Leaf,
-  Calendar,
-  Bell,
-  Settings,
-  Search,
-  Plus,
-  Filter,
-  Download,
-  BarChart3,
-  Globe
+  Activity,
 } from "lucide-react";
 
+interface ActivityItem {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  type: 'chat' | 'upload' | 'analysis';
+}
+
+const recentActivity: ActivityItem[] = [
+  {
+    id: '1',
+    title: 'Nova conversa iniciada',
+    description: 'Usuário iniciou uma conversa sobre abelhas e polinização',
+    time: '5 minutos atrás',
+    type: 'chat',
+  },
+  {
+    id: '2',
+    title: 'Documento enviado',
+    description: 'Upload do artigo "Impacto da urbanização na fauna local"',
+    time: '12 minutos atrás',
+    type: 'upload',
+  },
+  {
+    id: '3',
+    title: 'Análise concluída',
+    description: 'Análise de dados sobre a população de aves migratórias',
+    time: '30 minutos atrás',
+    type: 'analysis',
+  },
+];
+
 const Dashboard = () => {
+  const { user, signOut } = useAuth();
+
+  // Mock data and other functions
+  
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-green-50/50 via-white to-blue-50/50">
       {/* Header */}
-      <header className="border-b border-border/40 bg-surface-elevated sticky top-0 z-40">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-hero-gradient rounded-lg flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-white" />
+      <header className="bg-white/80 backdrop-blur-sm border-b border-green-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-hero-gradient rounded-xl flex items-center justify-center shadow-lg">
+                <Lightbulb className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gradient">Dr_C v2.0</span>
-            </div>
-            
-            <div className="hidden md:flex items-center space-x-1 ml-8">
-              <Button variant="ghost" size="sm">Dashboard</Button>
-              <Button variant="ghost" size="sm">Analytics</Button>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            {/* Busca Global */}
-            <div className="hidden md:flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input 
-                  placeholder="Buscar..." 
-                  className="pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                  Dr_C v2.0
+                </h1>
+                <p className="text-xs text-muted-foreground">Biodiversidade Inteligente</p>
               </div>
             </div>
 
-            {/* Notificações */}
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-5 w-5" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full text-xs"></div>
-            </Button>
+            {/* Navigation */}
+            <nav className="hidden md:flex items-center space-x-1">
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                <Home className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary" asChild>
+                <Link to="/chat">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Chat IA
+                </Link>
+              </Button>
+              <Button variant="ghost" className="text-muted-foreground hover:text-primary">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Documentos
+              </Button>
+            </nav>
 
-            {/* Perfil */}
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">JS</span>
-              </div>
-              <span className="hidden md:block text-sm font-medium">João Silva</span>
+            {/* User Menu */}
+            <div className="flex items-center space-x-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
+                      <AvatarFallback className="bg-hero-gradient text-white text-sm">
+                        {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user?.user_metadata?.full_name || 'Usuário'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Perfil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configurações</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-surface border-r border-border/40 min-h-screen p-4">
-          <nav className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Principal
-            </div>
-            <Button variant="ghost" className="w-full justify-start bg-primary/10 text-primary">
-              <BarChart3 className="mr-2 h-4 w-4" />
-              Dashboard
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Chat Dr_C
-            </Button>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-foreground mb-2">
+            Bem-vindo, {user?.user_metadata?.full_name || 'Pesquisador'}!
+          </h2>
+          <p className="text-muted-foreground">
+            Explore o mundo da biodiversidade com inteligência artificial avançada
+          </p>
+        </div>
 
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-6">
-              Ferramentas
-            </div>
-            <Button variant="ghost" className="w-full justify-start">
-              <Globe className="mr-2 h-4 w-4" />
-              API
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <Settings className="mr-2 h-4 w-4" />
-              Configurações
-            </Button>
-          </nav>
-
-          {/* Upgrade Prompt */}
-          <div className="mt-8">
-            <Card className="bg-card-gradient border-primary/20">
-              <CardContent className="p-4 text-center">
-                <div className="w-8 h-8 bg-hero-gradient rounded-full flex items-center justify-center mx-auto mb-3">
-                  <TrendingUp className="h-4 w-4 text-white" />
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="hover-lift bg-card-gradient border-0 shadow-soft cursor-pointer group" asChild>
+            <Link to="/chat">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center">
+                    <div className="w-10 h-10 bg-hero-gradient rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                      <MessageSquare className="h-5 w-5 text-white" />
+                    </div>
+                    Iniciar Chat IA
+                  </CardTitle>
                 </div>
-                <h4 className="font-semibold mb-2">Upgrade para Pro</h4>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Acesse IA avançada e recursos premium
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  Converse com o Dr_C v2.0 sobre biodiversidade, ecologia e conservação
                 </p>
-                <Button size="sm" className="w-full bg-hero-gradient hover:opacity-90">
-                  Fazer Upgrade
-                </Button>
               </CardContent>
-            </Card>
-          </div>
-        </aside>
+            </Link>
+          </Card>
 
-        {/* Conteúdo Principal */}
-        <main className="flex-1 p-6">
-          {/* Boas-vindas */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-3xl font-bold">
-                Bom dia, <span className="text-gradient">João</span> 👋
-              </h1>
-              <div className="flex items-center space-x-2">
-                <Badge variant="secondary" className="bg-success/10 text-success">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  Plano Pro Ativo
-                </Badge>
+          <Card className="hover-lift bg-card-gradient border-0 shadow-soft cursor-pointer group">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center">
+                  <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <Upload className="h-5 w-5 text-success" />
+                  </div>
+                  Carregar Documento
+                </CardTitle>
               </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                Faça upload de documentos para análise e extração de insights
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="hover-lift bg-card-gradient border-0 shadow-soft cursor-pointer group">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center">
+                  <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <BarChart className="h-5 w-5 text-primary" />
+                  </div>
+                  Relatórios
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm">
+                Visualize relatórios e análises detalhadas dos seus dados
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <MetricCard
+            title="Total de Conversas"
+            value="15"
+            icon={<MessageSquare className="h-4 w-4" />}
+            trend={{ value: 12, label: "este mês" }}
+          />
+          
+          <MetricCard
+            title="Documentos Processados"
+            value="8"
+            icon={<FileText className="h-4 w-4" />}
+            trend={{ value: 25, label: "este mês" }}
+          />
+          
+          <MetricCard
+            title="Insights Gerados"
+            value="42"
+            icon={<Brain className="h-4 w-4" />}
+            trend={{ value: 8, label: "esta semana" }}
+          />
+          
+          <MetricCard
+            title="Espécies Analisadas"
+            value="127"
+            icon={<Leaf className="h-4 w-4" />}
+            trend={{ value: 15, label: "este mês" }}
+          />
+        </div>
+
+        {/* Recent Activity */}
+        <Card className="bg-card-gradient border-0 shadow-soft">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Activity className="h-5 w-5 mr-2" />
+              Atividade Recente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentActivity.map((activity) => (
+                <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.type === 'chat' 
+                    ? 'bg-blue-500/20 text-blue-600' 
+                    : activity.type === 'upload' 
+                    ? 'bg-green-500/20 text-green-600'
+                    : 'bg-purple-500/20 text-purple-600'
+                  }`}>
+                    {activity.type === 'chat' && <MessageSquare className="h-4 w-4" />}
+                    {activity.type === 'upload' && <Upload className="h-4 w-4" />}
+                    {activity.type === 'analysis' && <Brain className="h-4 w-4" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{activity.title}</p>
+                    <p className="text-xs text-muted-foreground">{activity.description}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{activity.time}</span>
+                </div>
+              ))}
             </div>
-            <p className="text-muted-foreground">
-              Aqui está um resumo da sua atividade em biodiversidade hoje.
-            </p>
-          </div>
-
-          {/* Métricas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <MetricCard
-              title="Conversas este mês"
-              value="47"
-              icon={<MessageCircle className="h-4 w-4" />}
-              trend={{ value: 23, label: "vs mês anterior" }}
-            />
-            <MetricCard
-              title="Documentos analisados"
-              value="12"
-              icon={<BookOpen className="h-4 w-4" />}
-              trend={{ value: 8, label: "esta semana" }}
-            />
-          </div>
-
-          {/* Tabs de Conteúdo */}
-          <Tabs defaultValue="overview" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <TabsList className="grid w-[200px] grid-cols-1">
-                <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-              </TabsList>
-              
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filtros
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar
-                </Button>
-                <Button size="sm" className="bg-hero-gradient hover:opacity-90">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Novo Projeto
-                </Button>
-              </div>
-            </div>
-
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Atividade Recente */}
-                <Card className="bg-card-gradient border-0 shadow-soft">
-                  <CardHeader>
-                    <CardTitle>Atividade Recente</CardTitle>
-                    <CardDescription>
-                      Suas últimas interações com o Dr_C
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {[
-                      {
-                        action: "Chat sobre polinizadores",
-                        time: "2 horas atrás",
-                        type: "chat"
-                      },
-                      {
-                        action: "Análise do paper: 'Bee Diversity in Urban Areas'",
-                        time: "1 dia atrás",
-                        type: "analysis"
-                      },
-                      {
-                        action: "Salvou artigo na biblioteca",
-                        time: "2 dias atrás",
-                        type: "save"
-                      }
-                    ].map((activity, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{activity.action}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                {/* Recursos Recomendados */}
-                <Card className="bg-card-gradient border-0 shadow-soft">
-                  <CardHeader>
-                    <CardTitle>Recomendado para Você</CardTitle>
-                    <CardDescription>
-                      Baseado no seu histórico de pesquisa
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {[
-                      {
-                        title: "Impacto das Mudanças Climáticas na Polinização",
-                        type: "Artigo Científico",
-                        badge: "Trending"
-                      },
-                      {
-                        title: "Guia de Identificação de Abelhas Nativas",
-                        type: "Recurso Educacional",
-                        badge: "Popular"
-                      },
-                      {
-                        title: "Workshop: Conservação de Polinizadores",
-                        type: "Evento",
-                        badge: "Novo"
-                      }
-                    ].map((resource, index) => (
-                      <div key={index} className="p-3 rounded-lg bg-muted/30 hover-lift">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {resource.badge}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">{resource.type}</span>
-                        </div>
-                        <h4 className="font-medium text-sm">{resource.title}</h4>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </main>
-      </div>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 };
