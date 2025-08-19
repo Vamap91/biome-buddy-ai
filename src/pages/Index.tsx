@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -378,7 +379,7 @@ const Index = () => {
                   <div className="text-primary">curl -X POST https://api.drc.bio/v2/chat/message \</div>
                   <div className="text-muted-foreground">  -H "Authorization: Bearer YOUR_API_KEY" \</div>
                   <div className="text-muted-foreground">  -H "Content-Type: application/json" \</div>
-                  <div className="text-muted-foreground">  -d '{"message": "Como as abelhas ajudam na polinização?"}'</div>
+                  <div className="text-muted-foreground">  -d '{"{"}"message": "Como as abelhas ajudam na polinização?"{"}"}'</div>
                 </div>
               </CardContent>
             </Card>
