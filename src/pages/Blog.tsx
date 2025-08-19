@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useLanguage } from '@/hooks/useLanguage';
 import { 
   Leaf, 
   PlusCircle, 
@@ -26,13 +24,16 @@ import {
   Trash2,
   Save,
   X,
-  ArrowLeft
+  LayoutDashboard,
+  Gamepad2,
+  Settings
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-const Blog = () => {
-  const { t } = useLanguage();
+const BlogSystem = () => {
+  const navigate = useNavigate();
   const [currentView, setCurrentView] = useState('home'); // home, create, post, edit
-  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isEditing, setIsEditing] = useState(false);
@@ -111,11 +112,11 @@ O projeto também gera renda para as comunidades locais através da coleta suste
   ]);
 
   const categories = [
-    { id: 'all', name: t('allPosts'), count: blogPosts.length },
-    { id: 'descobertas', name: t('discoveries'), count: blogPosts.filter(p => p.category === 'descobertas').length },
-    { id: 'pesquisa', name: t('research'), count: blogPosts.filter(p => p.category === 'pesquisa').length },
-    { id: 'conservacao', name: t('conservation'), count: blogPosts.filter(p => p.category === 'conservacao').length },
-    { id: 'educacao', name: t('education'), count: blogPosts.filter(p => p.category === 'educacao').length }
+    { id: 'all', name: 'Todos', count: blogPosts.length },
+    { id: 'descobertas', name: 'Descobertas', count: blogPosts.filter(p => p.category === 'descobertas').length },
+    { id: 'pesquisa', name: 'Pesquisa', count: blogPosts.filter(p => p.category === 'pesquisa').length },
+    { id: 'conservacao', name: 'Conservação', count: blogPosts.filter(p => p.category === 'conservacao').length },
+    { id: 'educacao', name: 'Educação', count: blogPosts.filter(p => p.category === 'educacao').length }
   ];
 
   const [newPost, setNewPost] = useState({
@@ -123,7 +124,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
     excerpt: '',
     content: '',
     category: 'pesquisa',
-    tags: [] as string[],
+    tags: [],
     newTag: ''
   });
 
@@ -176,7 +177,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
     }
   };
 
-  const removeTag = (tagToRemove: string) => {
+  const removeTag = (tagToRemove) => {
     setNewPost({
       ...newPost,
       tags: newPost.tags.filter(tag => tag !== tagToRemove)
@@ -189,30 +190,42 @@ O projeto também gera renda para as comunidades locais através da coleta suste
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Leaf className="h-6 w-6 text-primary-foreground" />
+            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
+              <Leaf className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{t('blogTitle')}</h1>
-              <p className="text-sm text-gray-600">{t('blogSubtitle')}</p>
+              <h1 className="text-2xl font-bold text-gray-900">Blog Dr_C v2.0</h1>
+              <p className="text-sm text-gray-600">Centro de Conhecimento em Biodiversidade</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-3">
+            <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+            <Button onClick={() => navigate('/games')} variant="outline" size="sm">
+              <Gamepad2 className="h-4 w-4 mr-2" />
+              Jogos
+            </Button>
+            <Button onClick={() => navigate('/settings')} variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Configurações
+            </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentView('home')}
               className={currentView === 'home' ? 'bg-green-50 border-green-300' : ''}
             >
               <BookOpen className="h-4 w-4 mr-2" />
-              {t('blog')}
+              Blog
             </Button>
             <Button 
               onClick={() => setCurrentView('create')}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-green-600 hover:bg-green-700"
             >
               <PlusCircle className="h-4 w-4 mr-2" />
-              {t('newPost')}
+              Novo Post
             </Button>
           </div>
         </div>
@@ -229,7 +242,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder={t('searchPlaceholder')}
+              placeholder="Buscar posts, tags ou autores..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -237,7 +250,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
           </div>
           <Button variant="outline" className="flex items-center">
             <Filter className="h-4 w-4 mr-2" />
-            {t('filters')}
+            Filtros
           </Button>
         </div>
         
@@ -249,7 +262,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
               variant={selectedCategory === category.id ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory(category.id)}
-              className={selectedCategory === category.id ? 'bg-primary hover:bg-primary/90' : ''}
+              className={selectedCategory === category.id ? 'bg-green-600 hover:bg-green-700' : ''}
             >
               {category.name} ({category.count})
             </Button>
@@ -261,15 +274,15 @@ O projeto também gera renda para as comunidades locais através da coleta suste
       {featuredPosts.length > 0 && selectedCategory === 'all' && !searchTerm && (
         <section className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-            <TrendingUp className="h-6 w-6 mr-2 text-primary" />
-            {t('featuredPosts')}
+            <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
+            Posts em Destaque
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             {featuredPosts.map(post => (
               <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="h-48 bg-hero-gradient relative">
-                  <Badge className="absolute top-4 left-4 bg-white text-primary">
-                    {t('featured')}
+                <div className="h-48 bg-gradient-to-r from-green-400 to-green-600 relative">
+                  <Badge className="absolute top-4 left-4 bg-white text-green-700">
+                    Destaque
                   </Badge>
                 </div>
                 <CardContent className="p-6">
@@ -277,7 +290,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
                     {post.category}
                   </Badge>
                   <h3 
-                    className="text-xl font-bold mb-3 hover:text-primary cursor-pointer"
+                    className="text-xl font-bold mb-3 hover:text-green-600 cursor-pointer"
                     onClick={() => {
                       setSelectedPost(post);
                       setCurrentView('post');
@@ -320,14 +333,14 @@ O projeto também gera renda para as comunidades locais através da coleta suste
       {/* All Posts */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          {searchTerm ? `${t('searchResults')} "${searchTerm}"` : t('allPosts')}
+          {searchTerm ? `Resultados para "${searchTerm}"` : 'Todos os Posts'}
         </h2>
         
         {filteredPosts.length === 0 ? (
           <Card className="p-12 text-center">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-600 mb-2">{t('noPostsFound')}</h3>
-            <p className="text-gray-500">{t('adjustFilters')}</p>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">Nenhum post encontrado</h3>
+            <p className="text-gray-500">Tente ajustar os filtros ou termos de busca.</p>
           </Card>
         ) : (
           <div className="grid gap-6">
@@ -335,7 +348,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
               <Card key={post.id} className="overflow-hidden hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
-                    <div className="md:w-32 h-24 bg-hero-gradient rounded-lg flex-shrink-0"></div>
+                    <div className="md:w-32 h-24 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex-shrink-0"></div>
                     
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
@@ -344,7 +357,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
                             {post.category}
                           </Badge>
                           <h3 
-                            className="text-xl font-bold hover:text-primary cursor-pointer"
+                            className="text-xl font-bold hover:text-green-600 cursor-pointer"
                             onClick={() => {
                               setSelectedPost(post);
                               setCurrentView('post');
@@ -355,7 +368,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
                         </div>
                         {post.featured && (
                           <Badge className="bg-yellow-100 text-yellow-800">
-                            {t('featured')}
+                            Destaque
                           </Badge>
                         )}
                       </div>
@@ -420,23 +433,23 @@ O projeto também gera renda para as comunidades locais através da coleta suste
         <CardHeader>
           <CardTitle className="flex items-center text-2xl">
             <Edit className="h-6 w-6 mr-2" />
-            {t('createNewPost')}
+            Criar Novo Post
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">{t('postTitle')}</label>
+            <label className="block text-sm font-medium mb-2">Título do Post</label>
             <Input
-              placeholder={t('postTitlePlaceholder')}
+              placeholder="Digite o título do seu post..."
               value={newPost.title}
               onChange={(e) => setNewPost({...newPost, title: e.target.value})}
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">{t('excerpt')}</label>
+            <label className="block text-sm font-medium mb-2">Resumo/Excerpt</label>
             <Textarea
-              placeholder={t('excerptPlaceholder')}
+              placeholder="Escreva um resumo atrativo do seu post..."
               value={newPost.excerpt}
               onChange={(e) => setNewPost({...newPost, excerpt: e.target.value})}
               rows={3}
@@ -444,29 +457,29 @@ O projeto também gera renda para as comunidades locais através da coleta suste
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">{t('category')}</label>
+            <label className="block text-sm font-medium mb-2">Categoria</label>
             <select 
               className="w-full p-2 border border-gray-300 rounded-md"
               value={newPost.category}
               onChange={(e) => setNewPost({...newPost, category: e.target.value})}
             >
-              <option value="descobertas">{t('discoveries')}</option>
-              <option value="pesquisa">{t('research')}</option>
-              <option value="conservacao">{t('conservation')}</option>
-              <option value="educacao">{t('education')}</option>
+              <option value="descobertas">Descobertas</option>
+              <option value="pesquisa">Pesquisa</option>
+              <option value="conservacao">Conservação</option>
+              <option value="educacao">Educação</option>
             </select>
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">{t('tags')}</label>
+            <label className="block text-sm font-medium mb-2">Tags</label>
             <div className="flex gap-2 mb-2">
               <Input
-                placeholder={t('tagPlaceholder')}
+                placeholder="Digite uma tag..."
                 value={newPost.newTag}
                 onChange={(e) => setNewPost({...newPost, newTag: e.target.value})}
                 onKeyPress={(e) => e.key === 'Enter' && addTag()}
               />
-              <Button onClick={addTag} variant="outline">{t('addTag')}</Button>
+              <Button onClick={addTag} variant="outline">Adicionar</Button>
             </div>
             <div className="flex flex-wrap gap-2">
               {newPost.tags.map(tag => (
@@ -478,9 +491,9 @@ O projeto também gera renda para as comunidades locais através da coleta suste
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">{t('content')}</label>
+            <label className="block text-sm font-medium mb-2">Conteúdo</label>
             <Textarea
-              placeholder={t('contentPlaceholder')}
+              placeholder="Escreva o conteúdo completo do seu post..."
               value={newPost.content}
               onChange={(e) => setNewPost({...newPost, content: e.target.value})}
               rows={15}
@@ -488,12 +501,12 @@ O projeto também gera renda para as comunidades locais através da coleta suste
           </div>
           
           <div className="flex gap-3">
-            <Button onClick={handleCreatePost} className="bg-primary hover:bg-primary/90">
+            <Button onClick={handleCreatePost} className="bg-green-600 hover:bg-green-700">
               <Save className="h-4 w-4 mr-2" />
-              {t('publishPost')}
+              Publicar Post
             </Button>
             <Button variant="outline" onClick={() => setCurrentView('home')}>
-              {t('cancel')}
+              Cancelar
             </Button>
           </div>
         </CardContent>
@@ -512,8 +525,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
               onClick={() => setCurrentView('home')}
               className="mb-4"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              {t('backToBlog')}
+              ← Voltar ao Blog
             </Button>
             
             <Badge variant="outline" className="mb-4 capitalize">
@@ -540,7 +552,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
               <div className="flex items-center space-x-4">
                 <Button variant="outline" size="sm">
                   <Share2 className="h-4 w-4 mr-2" />
-                  {t('share')}
+                  Compartilhar
                 </Button>
                 <div className="flex items-center space-x-3 text-sm text-gray-500">
                   <span className="flex items-center">
@@ -556,7 +568,7 @@ O projeto também gera renda para as comunidades locais através da coleta suste
             </div>
             
             <div className="flex flex-wrap gap-2 mb-6">
-              {selectedPost.tags.map((tag: string) => (
+              {selectedPost.tags.map(tag => (
                 <Badge key={tag} variant="secondary">
                   <Tag className="h-3 w-3 mr-1" />
                   {tag}
@@ -565,10 +577,10 @@ O projeto também gera renda para as comunidades locais através da coleta suste
             </div>
           </header>
           
-          <div className="h-64 bg-hero-gradient rounded-lg mb-8"></div>
+          <div className="h-64 bg-gradient-to-r from-green-400 to-green-600 rounded-lg mb-8"></div>
           
           <div className="prose prose-lg max-w-none">
-            {selectedPost.content.split('\n\n').map((paragraph: string, index: number) => (
+            {selectedPost.content.split('\n\n').map((paragraph, index) => (
               <p key={index} className="mb-4 text-gray-700 leading-relaxed">
                 {paragraph}
               </p>
@@ -580,16 +592,16 @@ O projeto também gera renda para as comunidades locais através da coleta suste
               <div className="flex items-center space-x-4">
                 <Button variant="outline" size="sm">
                   <Heart className="h-4 w-4 mr-2" />
-                  {selectedPost.likes} {t('likes')}
+                  {selectedPost.likes} Curtidas
                 </Button>
                 <Button variant="outline" size="sm">
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  {selectedPost.comments} {t('comments')}
+                  {selectedPost.comments} Comentários
                 </Button>
               </div>
               <Button variant="outline" size="sm">
                 <Share2 className="h-4 w-4 mr-2" />
-                {t('share')}
+                Compartilhar
               </Button>
             </div>
           </footer>
@@ -609,4 +621,4 @@ O projeto também gera renda para as comunidades locais através da coleta suste
   );
 };
 
-export default Blog;
+export default BlogSystem;

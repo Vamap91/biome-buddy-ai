@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -10,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { EnhancedCalendar } from '@/components/ui/enhanced-calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Settings as SettingsIcon, Trash2, Globe, User, CreditCard } from 'lucide-react';
+import { CalendarIcon, Settings as SettingsIcon, Trash2, Globe, User, CreditCard, Gamepad2, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
@@ -130,9 +129,19 @@ const Settings = () => {
               <p className="text-muted-foreground">{t('managePreferences')}</p>
             </div>
           </div>
-          <Button onClick={() => navigate('/dashboard')} variant="outline">
-            {t('backToDashboard')}
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button onClick={() => navigate('/games')} variant="outline" size="sm">
+              <Gamepad2 className="h-4 w-4 mr-2" />
+              {t('games')}
+            </Button>
+            <Button onClick={() => navigate('/blog')} variant="outline" size="sm">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Blog
+            </Button>
+            <Button onClick={() => navigate('/dashboard')} variant="outline">
+              {t('backToDashboard')}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-6">

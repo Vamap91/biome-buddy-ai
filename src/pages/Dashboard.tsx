@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -14,7 +13,9 @@ import {
   MessageCircle,
   TrendingUp,
   Users,
-  Calendar
+  Calendar,
+  Gamepad2,
+  BookOpen
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -62,6 +63,14 @@ const Dashboard = () => {
           </div>
           
           <div className="flex items-center space-x-3">
+            <Button onClick={() => navigate('/games')} variant="outline" size="sm">
+              <Gamepad2 className="h-4 w-4 mr-2" />
+              {t('games')}
+            </Button>
+            <Button onClick={() => navigate('/blog')} variant="outline" size="sm">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Blog
+            </Button>
             <Button onClick={() => navigate('/settings')} variant="outline" size="sm">
               <Settings className="h-4 w-4 mr-2" />
               {t('settings')}

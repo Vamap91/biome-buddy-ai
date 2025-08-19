@@ -3,7 +3,7 @@ import React from 'react';
 import ChatWithSidebar from '@/components/ChatWithSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Settings, LayoutDashboard } from 'lucide-react';
+import { Settings, LayoutDashboard, Gamepad2, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
@@ -34,6 +34,22 @@ const Chat = () => {
           >
             <LayoutDashboard className="h-4 w-4 mr-2" />
             Dashboard
+          </Button>
+          <Button 
+            onClick={() => navigate('/games')} 
+            variant="outline" 
+            size="sm"
+          >
+            <Gamepad2 className="h-4 w-4 mr-2" />
+            Jogos
+          </Button>
+          <Button 
+            onClick={() => navigate('/blog')} 
+            variant="outline" 
+            size="sm"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            Blog
           </Button>
           <Button 
             onClick={() => navigate('/settings')} 

@@ -11,12 +11,17 @@ import {
   Factory,
   Sprout,
   Eye,
-  EyeOff
+  EyeOff,
+  LayoutDashboard,
+  BookOpen,
+  Settings
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useNavigate } from 'react-router-dom';
 
 const GamesPage = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState(null);
   
   // Jogo da Velha States
@@ -144,14 +149,31 @@ const GamesPage = () => {
   const GameSelection = () => (
     <div className="min-h-screen bg-gradient-to-br from-nature-light to-nature-medium p-4">
       <div className="max-w-4xl mx-auto">
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
+        <header className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
               <Leaf className="h-7 w-7 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">{t('ecoGames')}</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">{t('ecoGames')}</h1>
+              <p className="text-muted-foreground">{t('ecoGamesSubtitle')}</p>
+            </div>
           </div>
-          <p className="text-muted-foreground">{t('ecoGamesSubtitle')}</p>
+          
+          <div className="flex items-center space-x-2">
+            <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+            <Button onClick={() => navigate('/blog')} variant="outline" size="sm">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Blog
+            </Button>
+            <Button onClick={() => navigate('/settings')} variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Configurações
+            </Button>
+          </div>
         </header>
 
         <div className="grid md:grid-cols-2 gap-6">
