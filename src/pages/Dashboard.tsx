@@ -16,11 +16,12 @@ import {
   Zap,
   Globe
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -98,11 +99,13 @@ const Dashboard = () => {
           <nav className="p-4 space-y-2">
             <div className="space-y-1">
               <h3 className="text-sm font-medium text-muted-foreground mb-2">Principal</h3>
-              <Button variant="ghost" className="w-full justify-start">
-                <Link to="/chat" className="flex items-center w-full">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  {t('chatAI')}
-                </Link>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => navigate('/chat')}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Fale com o Dr_C
               </Button>
             </div>
 
@@ -135,11 +138,12 @@ const Dashboard = () => {
               <p className="text-white/80 mb-4">
                 {t('readyToExplore')}
               </p>
-              <Button variant="secondary">
-                <Link to="/chat" className="flex items-center">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  {t('startNewConversation')}
-                </Link>
+              <Button 
+                variant="secondary"
+                onClick={() => navigate('/chat')}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                {t('startNewConversation')}
               </Button>
             </div>
 
