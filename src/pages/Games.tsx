@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -302,7 +301,7 @@ const GamesPage = () => {
             <CardContent className="p-4 text-center">
               <div className="text-4xl mb-2">🎉</div>
               <h3 className="text-xl font-bold text-success mb-2">{t('congratulations')}</h3>
-              <p className="text-success/80">{t('foundAllSpecies').replace('{moves}', memoryMoves)}</p>
+              <p className="text-success/80">{t('foundAllSpecies').replace('{moves}', memoryMoves.toString())}</p>
             </CardContent>
           </Card>
         )}
