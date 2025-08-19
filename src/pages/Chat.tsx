@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useConversations } from '@/hooks/useConversations';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import ChatInterface from '@/components/ChatInterface';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,8 @@ import {
   User,
   Bot,
   Loader2,
-  Trash2
+  Trash2,
+  BarChart3
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -28,6 +30,7 @@ import {
 
 const Chat = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const {
     conversations,
     messages,
@@ -77,6 +80,18 @@ const Chat = () => {
             <h2 className="text-lg font-semibold">Dr_C v2.0</h2>
             <Button onClick={handleNewChat} size="sm" className="bg-hero-gradient">
               <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* Navigation */}
+          <div className="space-y-2 mb-4">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start"
+              onClick={() => navigate('/dashboard')}
+            >
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Dashboard
             </Button>
           </div>
           
