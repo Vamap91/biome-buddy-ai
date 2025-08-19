@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -101,7 +102,7 @@ const Index = () => {
       features: [
         "Chat ilimitado com IA avançada",
         "Upload de documentos",
-        "API access (100 calls/mês)",
+        "Recursos avançados",
         "Histórico completo",
         "Suporte prioritário"
       ],
@@ -373,7 +374,7 @@ const Index = () => {
             <Button 
               size="lg" 
               variant="secondary" 
-              className="text-primary"
+              className="text-primary bg-white hover:bg-white/90"
               onClick={() => navigate('/dashboard')}
             >
               Começar Grátis Agora
