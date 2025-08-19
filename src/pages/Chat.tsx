@@ -1,6 +1,6 @@
 
 import React from 'react';
-import ChatInterface from '@/components/ChatInterface';
+import ChatWithSidebar from '@/components/ChatWithSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Settings, LayoutDashboard } from 'lucide-react';
@@ -49,9 +49,9 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Chat Interface */}
+      {/* Chat Interface with Sidebar */}
       <div className="flex-1">
-        <ChatInterface />
+        <ChatWithSidebar />
       </div>
     </div>
   );
