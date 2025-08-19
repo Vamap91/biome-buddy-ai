@@ -1,347 +1,374 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import AuthCard from "@/components/AuthCard";
+
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate, Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Leaf, Mail, Lock, User } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Login = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    fullName: "",
-  });
-  const [error, setError] = useState("");
-
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  
+  // Signup form state
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-    setError("");
+  // Redirect authenticated users
+  React.useEffect(() => {
+    if (user && !loading) {
+      navigate('/chat');
+    }
+  }, [user, loading, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!loginEmail || !loginPassword) {
+      setError('Por favor, preencha todos os campos');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      const { error } = await signIn(loginEmail, loginPassword);
+      
+      if (error) {
+        console.error('Login error:', error);
+        
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Email ou senha incorretos');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Por favor, confirme seu email antes de fazer login');
+        } else {
+          setError(error.message);
+        }
+      } else {
+        toast.success('Login realizado com sucesso!');
+        // Navigation will be handled by the useEffect above
+      }
+    } catch (err) {
+      console.error('Unexpected login error:', err);
+      setError('Erro inesperado. Tente novamente.');
+    }
+    
+    setIsSubmitting(false);
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!signupEmail || !signupPassword || !confirmPassword) {
+      setError('Por favor, preencha todos os campos');
+      return;
+    }
+
+    if (signupPassword !== confirmPassword) {
+      setError('As senhas não coincidem');
+      return;
+    }
+
+    if (signupPassword.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      const { error } = await signUp(signupEmail, signupPassword);
+      
+      if (error) {
+        console.error('Signup error:', error);
+        
+        if (error.message.includes('User already registered')) {
+          setError('Este email já está cadastrado. Faça login instead.');
+        } else if (error.message.includes('Password should be at least')) {
+          setError('A senha deve ter pelo menos 6 caracteres');
+        } else {
+          setError(error.message);
+        }
+      } else {
+        toast.success('Cadastro realizado! Verifique seu email para confirmar a conta.');
+        // Clear form
+        setSignupEmail('');
+        setSignupPassword('');
+        setConfirmPassword('');
+      }
+    } catch (err) {
+      console.error('Unexpected signup error:', err);
+      setError('Erro inesperado. Tente novamente.');
+    }
+    
+    setIsSubmitting(false);
   };
 
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    setError("");
-
+    setIsSubmitting(true);
+    setError('');
+    
     try {
-      console.log("Iniciando login com Google...");
       const { error } = await signInWithGoogle();
       
       if (error) {
-        console.log("Erro detalhado do Google OAuth:", error);
+        console.error('Google sign in error:', error);
         
-        // Melhor tratamento de erros específicos do Google OAuth
-        if (error.message?.includes("403") || error.message?.includes("access")) {
-          setError("Erro de configuração do Google OAuth. Verifique se o domínio está autorizado no Google Cloud Console e se as URLs de redirecionamento estão configuradas corretamente no Supabase.");
-        } else if (error.message?.includes("popup")) {
-          setError("Popup bloqueado pelo navegador. Permita popups para este site e tente novamente.");
-        } else if (error.message?.includes("network")) {
-          setError("Erro de conexão. Verifique sua internet e tente novamente.");
+        if (error.message.includes('403')) {
+          setError('Acesso negado. Verifique as configurações de autenticação.');
+        } else if (error.message.includes('popup')) {
+          setError('Pop-up bloqueado. Permita pop-ups para este site.');
+        } else if (error.message.includes('network')) {
+          setError('Erro de conexão. Verifique sua internet.');
         } else {
-          setError(`Erro ao fazer login com Google: ${error.message || "Erro desconhecido"}`);
+          setError(`Erro no login com Google: ${error.message}`);
         }
-      } else {
-        console.log("Login com Google bem-sucedido!");
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Bem-vindo ao Dr_C v2.0",
-        });
-        // Não redirecionamos aqui pois o useAuth já vai gerenciar o estado
+        setIsSubmitting(false);
       }
+      // If successful, don't set isSubmitting to false here as redirect will happen
     } catch (err) {
-      console.error("Erro inesperado no login do Google:", err);
-      setError("Erro inesperado. Tente novamente em alguns momentos.");
+      console.error('Unexpected Google sign in error:', err);
+      setError('Erro inesperado no login com Google.');
+      setIsSubmitting(false);
     }
-    
-    setGoogleLoading(false);
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) {
-      setError("Por favor, preencha todos os campos");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    const { error } = await signIn(formData.email, formData.password);
-    
-    if (error) {
-      console.log("Erro de login:", error);
-      
-      // Verificar se o erro é de email não confirmado
-      if (error.message?.includes("Email not confirmed") || error.code === "email_not_confirmed") {
-        setError("Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada e spam.");
-      } else if (error.message?.includes("Invalid login credentials")) {
-        setError("Email ou senha incorretos");
-      } else {
-        setError("Erro ao fazer login. Tente novamente.");
-      }
-    } else {
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao Dr_C v2.0",
-      });
-      navigate("/chat");
-    }
-    
-    setLoading(false);
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password || !formData.fullName) {
-      setError("Por favor, preencha todos os campos");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    const { error } = await signUp(formData.email, formData.password, formData.fullName);
-    
-    if (error) {
-      console.log("Erro de cadastro:", error);
-      
-      if (error.message?.includes("User already registered")) {
-        setError("Este email já está cadastrado. Tente fazer login ou use outro email.");
-      } else {
-        setError(error.message || "Erro ao criar conta");
-      }
-    } else {
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta antes de fazer login",
-      });
-      // Limpar o formulário após sucesso
-      setFormData({ email: "", password: "", fullName: "" });
-    }
-    
-    setLoading(false);
-  };
-
-  return (
-    <AuthCard 
-      title="Acesse sua conta"
-      description="Entre com suas credenciais ou crie uma nova conta"
-    >
-      {/* Botão do Google no topo */}
-      <Button 
-        variant="outline" 
-        className="w-full mb-4" 
-        onClick={handleGoogleSignIn}
-        disabled={googleLoading || loading}
-      >
-        {googleLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Entrando...
-          </>
-        ) : (
-          <>
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Continuar com Google
-          </>
-        )}
-      </Button>
-
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Ou continue com</span>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
         </div>
       </div>
+    );
+  }
 
-      <Tabs defaultValue="login" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">Entrar</TabsTrigger>
-          <TabsTrigger value="register">Cadastrar</TabsTrigger>
-        </TabsList>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <TabsContent value="login" className="space-y-4">
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="login-email">Email</Label>
-              <Input
-                id="login-email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="seu@email.com"
-                disabled={loading || googleLoading}
-              />
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Leaf className="h-6 w-6 text-white" />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="login-password">Senha</Label>
+            <span className="text-2xl font-bold text-gray-900">Dr_C v2.0</span>
+          </div>
+          <p className="text-gray-600 text-sm">Plataforma de Biodiversidade com IA</p>
+        </div>
+
+        {/* Main Card */}
+        <Card className="shadow-xl">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-bold text-gray-900">Acesse sua conta</CardTitle>
+            <CardDescription className="text-base text-gray-600">
+              Entre na sua conta ou crie uma nova
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {error && (
+              <Alert className="mb-6 border-red-200 bg-red-50">
+                <AlertDescription className="text-red-600 text-sm">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Entrar</TabsTrigger>
+                <TabsTrigger value="signup">Cadastrar</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email" className="text-sm font-medium text-gray-700">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        className="pl-10"
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password" className="text-sm font-medium text-gray-700">
+                      Senha
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="Sua senha"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        className="pl-10"
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-green-600 hover:bg-green-700" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Entrando...' : 'Entrar'}
+                  </Button>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-sm font-medium text-gray-700">
+                      Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
+                        className="pl-10"
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-sm font-medium text-gray-700">
+                      Senha
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="Mínimo 6 caracteres"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                        className="pl-10"
+                        disabled={isSubmitting}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password" className="text-sm font-medium text-gray-700">
+                      Confirmar Senha
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        placeholder="Confirme sua senha"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="pl-10"
+                        disabled={isSubmitting}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-green-600 hover:bg-green-700" 
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+
+            <div className="mt-6">
               <div className="relative">
-                <Input
-                  id="login-password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Sua senha"
-                  disabled={loading || googleLoading}
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading || googleLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-200" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Ou continue com</span>
+                </div>
               </div>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoogleSignIn}
+                disabled={isSubmitting}
+                className="w-full mt-4 border-gray-200 hover:bg-gray-50"
+              >
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                  <path
+                    fill="currentColor"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="currentColor"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                {isSubmitting ? 'Conectando...' : 'Google'}
+              </Button>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={loading || googleLoading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
-                </>
-              ) : (
-                'Entrar'
-              )}
-            </Button>
-          </form>
-        </TabsContent>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="register" className="space-y-4">
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="register-name">Nome completo</Label>
-              <Input
-                id="register-name"
-                name="fullName"
-                type="text"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                placeholder="Seu nome completo"
-                disabled={loading || googleLoading}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="register-email">Email</Label>
-              <Input
-                id="register-email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="seu@email.com"
-                disabled={loading || googleLoading}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="register-password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="register-password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Mínimo 6 caracteres"
-                  disabled={loading || googleLoading}
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading || googleLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={loading || googleLoading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando conta...
-                </>
-              ) : (
-                'Criar conta'
-              )}
-            </Button>
-          </form>
-        </TabsContent>
-      </Tabs>
-
-      <p className="text-center text-sm text-muted-foreground mt-4">
-        Ao continuar, você concorda com nossos{" "}
-        <a href="#" className="underline underline-offset-4 hover:text-primary">
-          Termos de Serviço
-        </a>{" "}
-        e{" "}
-        <a href="#" className="underline underline-offset-4 hover:text-primary">
-          Política de Privacidade
-        </a>
-      </p>
-    </AuthCard>
+        {/* Footer */}
+        <div className="text-center mt-6 text-gray-500 text-sm">
+          <p>© 2024 Dr_C v2.0. Feito com 💚 para a biodiversidade.</p>
+          <p className="mt-2">
+            <Link to="/" className="text-green-600 hover:text-green-700 hover:underline">
+              ← Voltar para a página inicial
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 

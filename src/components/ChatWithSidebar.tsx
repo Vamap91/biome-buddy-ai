@@ -3,6 +3,8 @@ import React from 'react';
 import ChatInterface from './ChatInterface';
 import ConversationSidebar from './ConversationSidebar';
 import { useConversations } from '@/hooks/useConversations';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -12,6 +14,9 @@ interface Message {
 }
 
 const ChatWithSidebar = () => {
+  // Verificar se o AuthProvider está disponível
+  const { user, loading: authLoading } = useAuth();
+  
   const {
     conversations,
     messages,
@@ -23,6 +28,27 @@ const ChatWithSidebar = () => {
     sendMessage,
     deleteConversation,
   } = useConversations();
+
+  // Mostrar loading enquanto autentica
+  if (authLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não há usuário autenticado, não renderizar
+  if (!user) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <p className="text-gray-600">Você precisa estar logado para acessar o chat.</p>
+      </div>
+    );
+  }
 
   // Converter mensagens para o formato do ChatInterface
   const formattedMessages = messages.map(msg => ({
