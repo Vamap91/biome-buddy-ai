@@ -24,6 +24,7 @@ export function useConversations() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   // Fetch conversations with useCallback to prevent unnecessary re-renders
   const fetchConversations = useCallback(async () => {
@@ -39,12 +40,15 @@ export function useConversations() {
       if (error) {
         console.error('Error fetching conversations:', error);
       } else {
+        console.log('Conversations loaded:', data?.length || 0);
         setConversations(data || []);
       }
     } catch (err) {
       console.error('Unexpected error fetching conversations:', err);
+    } finally {
+      setLoading(false);
+      setInitialized(true);
     }
-    setLoading(false);
   }, [user]);
 
   // Fetch messages with useCallback
@@ -67,6 +71,7 @@ export function useConversations() {
           role: msg.role as 'user' | 'assistant',
           created_at: msg.created_at
         }));
+        console.log('Messages loaded for conversation:', conversationId, typedMessages.length);
         setMessages(typedMessages);
       }
     } catch (err) {
@@ -95,6 +100,8 @@ export function useConversations() {
         return null;
       }
 
+      console.log('New conversation created:', data.id);
+      // Refresh conversations after creating
       await fetchConversations();
       return data;
     } catch (err) {
@@ -128,6 +135,8 @@ export function useConversations() {
         return false;
       }
 
+      console.log('Conversation deleted:', conversationId);
+      // Refresh conversations after deleting
       await fetchConversations();
       
       if (currentConversation === conversationId) {
@@ -225,16 +234,18 @@ export function useConversations() {
     }
   }, [user, currentConversation, createConversation, fetchMessages, conversations, fetchConversations]);
 
-  // Only fetch conversations when user changes and is available
+  // Only fetch conversations when user is available and not already initialized
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !initialized) {
+      console.log('Initializing conversations for user:', user.id);
       fetchConversations();
     }
-  }, [user, fetchConversations, loading]);
+  }, [user, initialized, fetchConversations]);
 
   // Only fetch messages when currentConversation changes and is not null
   useEffect(() => {
     if (currentConversation && user) {
+      console.log('Loading messages for conversation:', currentConversation);
       fetchMessages(currentConversation);
     } else if (!currentConversation) {
       setMessages([]);
