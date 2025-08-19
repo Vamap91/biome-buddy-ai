@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,17 +38,34 @@ const Login = () => {
     setGoogleLoading(true);
     setError("");
 
-    const { error } = await signInWithGoogle();
-    
-    if (error) {
-      console.log("Erro de login com Google:", error);
-      setError("Erro ao fazer login com Google. Tente novamente.");
-    } else {
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao Dr_C v2.0",
-      });
-      navigate("/chat");
+    try {
+      console.log("Iniciando login com Google...");
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
+        console.log("Erro detalhado do Google OAuth:", error);
+        
+        // Melhor tratamento de erros específicos do Google OAuth
+        if (error.message?.includes("403") || error.message?.includes("access")) {
+          setError("Erro de configuração do Google OAuth. Verifique se o domínio está autorizado no Google Cloud Console e se as URLs de redirecionamento estão configuradas corretamente no Supabase.");
+        } else if (error.message?.includes("popup")) {
+          setError("Popup bloqueado pelo navegador. Permita popups para este site e tente novamente.");
+        } else if (error.message?.includes("network")) {
+          setError("Erro de conexão. Verifique sua internet e tente novamente.");
+        } else {
+          setError(`Erro ao fazer login com Google: ${error.message || "Erro desconhecido"}`);
+        }
+      } else {
+        console.log("Login com Google bem-sucedido!");
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo ao Dr_C v2.0",
+        });
+        // Não redirecionamos aqui pois o useAuth já vai gerenciar o estado
+      }
+    } catch (err) {
+      console.error("Erro inesperado no login do Google:", err);
+      setError("Erro inesperado. Tente novamente em alguns momentos.");
     }
     
     setGoogleLoading(false);

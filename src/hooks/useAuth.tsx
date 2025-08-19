@@ -31,9 +31,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Redirecionar para chat após login bem-sucedido
+        if (event === 'SIGNED_IN' && session) {
+          window.location.href = '/chat';
+        }
       }
     );
 
@@ -65,15 +71,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/chat`;
-    
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl
+    try {
+      console.log('Iniciando signInWithGoogle...');
+      
+      // Usar o domínio atual da aplicação para o redirect
+      const redirectUrl = `${window.location.origin}/chat`;
+      console.log('Redirect URL:', redirectUrl);
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Erro no signInWithOAuth:', error);
       }
-    });
-    return { error };
+      
+      return { error };
+    } catch (err) {
+      console.error('Erro inesperado no signInWithGoogle:', err);
+      return { error: err };
+    }
   };
 
   const signOut = async () => {
