@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -19,18 +20,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
-const profileSchema = z.object({
-  fullName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  birthDate: z.date({ required_error: 'Data de nascimento é obrigatória' }),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
-
 const Settings = () => {
   const { user, signOut } = useAuth();
-  const { language, toggleLanguage, t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const [isClearing, setIsClearing] = useState(false);
+  
+  const profileSchema = z.object({
+    fullName: z.string().min(2, language === 'pt' ? 'Nome deve ter pelo menos 2 caracteres' : 'Name must have at least 2 characters'),
+    birthDate: z.date({ required_error: language === 'pt' ? 'Data de nascimento é obrigatória' : 'Birth date is required' }),
+  });
+
+  type ProfileFormData = z.infer<typeof profileSchema>;
   
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -52,13 +53,13 @@ const Settings = () => {
       if (error) throw error;
 
       toast({
-        title: 'Perfil atualizado com sucesso!',
-        description: 'Suas informações foram salvas.',
+        title: t('profileUpdatedSuccess'),
+        description: t('informationSaved'),
       });
     } catch (error) {
       toast({
-        title: 'Erro ao atualizar perfil',
-        description: 'Tente novamente mais tarde.',
+        title: t('errorUpdatingProfile'),
+        description: t('tryAgainLater'),
         variant: 'destructive',
       });
     }
@@ -90,13 +91,13 @@ const Settings = () => {
       if (conversationsError) throw conversationsError;
 
       toast({
-        title: 'Histórico limpo com sucesso!',
-        description: 'Todas as conversas foram removidas.',
+        title: t('historyCleared'),
+        description: t('allConversationsRemoved'),
       });
     } catch (error) {
       toast({
-        title: 'Erro ao limpar histórico',
-        description: 'Tente novamente mais tarde.',
+        title: t('errorClearingHistory'),
+        description: t('tryAgainLater'),
         variant: 'destructive',
       });
     } finally {
@@ -107,6 +108,10 @@ const Settings = () => {
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage as 'pt' | 'en');
   };
 
   return (
@@ -120,13 +125,13 @@ const Settings = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-hero-gradient bg-clip-text text-transparent">
-                Configurações
+                {t('settings')}
               </h1>
-              <p className="text-muted-foreground">Gerencie suas preferências e informações</p>
+              <p className="text-muted-foreground">{t('managePreferences')}</p>
             </div>
           </div>
           <Button onClick={() => navigate('/dashboard')} variant="outline">
-            Voltar ao Dashboard
+            {t('backToDashboard')}
           </Button>
         </div>
 
@@ -136,10 +141,10 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <User className="h-5 w-5" />
-                <span>Informações Pessoais</span>
+                <span>{t('personalInfo')}</span>
               </CardTitle>
               <CardDescription>
-                Atualize suas informações pessoais
+                {t('updatePersonalInfo')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -150,9 +155,9 @@ const Settings = () => {
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nome Completo</FormLabel>
+                        <FormLabel>{t('fullName')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Digite seu nome completo" {...field} />
+                          <Input placeholder={t('enterFullName')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -164,7 +169,7 @@ const Settings = () => {
                     name="birthDate"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Data de Nascimento</FormLabel>
+                        <FormLabel>{t('birthDate')}</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -178,7 +183,7 @@ const Settings = () => {
                                 {field.value ? (
                                   format(field.value, "dd/MM/yyyy")
                                 ) : (
-                                  <span>Selecione uma data</span>
+                                  <span>{t('selectDate')}</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
@@ -200,10 +205,6 @@ const Settings = () => {
                       </FormItem>
                     )}
                   />
-
-                  <Button type="submit" className="w-full">
-                    Salvar Alterações
-                  </Button>
                 </form>
               </Form>
             </CardContent>
@@ -214,29 +215,29 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <CreditCard className="h-5 w-5" />
-                <span>Plano Atual</span>
+                <span>{t('currentPlan')}</span>
               </CardTitle>
               <CardDescription>
-                Informações sobre sua assinatura
+                {t('subscriptionInfo')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                   <div>
-                    <h3 className="font-semibold">Plano Gratuito</h3>
+                    <h3 className="font-semibold">{t('freePlan')}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Acesso limitado às funcionalidades básicas
+                      {t('limitedAccess')}
                     </p>
                   </div>
                   <Button variant="outline">
-                    Fazer Upgrade
+                    {t('upgrade')}
                   </Button>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <p>• 10 conversas por mês</p>
-                  <p>• Suporte básico</p>
-                  <p>• Funcionalidades essenciais</p>
+                  <p>• {t('conversationsPerMonth')}</p>
+                  <p>• {t('basicSupport')}</p>
+                  <p>• {t('essentialFeatures')}</p>
                 </div>
               </div>
             </CardContent>
@@ -247,21 +248,21 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Globe className="h-5 w-5" />
-                <span>Idioma</span>
+                <span>{t('language')}</span>
               </CardTitle>
               <CardDescription>
-                Escolha o idioma da interface
+                {t('chooseLanguage')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Select value={language} onValueChange={toggleLanguage}>
+                <Select value={language} onValueChange={handleLanguageChange}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o idioma" />
+                    <SelectValue placeholder={t('selectLanguage')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pt">Português</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="pt">{t('portuguese')}</SelectItem>
+                    <SelectItem value="en">{t('english')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -273,50 +274,59 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Trash2 className="h-5 w-5" />
-                <span>Gerenciar Dados</span>
+                <span>{t('manageData')}</span>
               </CardTitle>
               <CardDescription>
-                Limpe seu histórico de conversas
+                {t('clearHistory')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-lg">
-                  <h3 className="font-semibold text-destructive mb-2">Zona de Perigo</h3>
+                  <h3 className="font-semibold text-destructive mb-2">{t('dangerZone')}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Esta ação não pode ser desfeita. Isso irá permanentemente deletar todas as suas conversas e mensagens.
+                    {t('clearHistoryWarning')}
                   </p>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="destructive" disabled={isClearing}>
-                        {isClearing ? 'Limpando...' : 'Limpar Todo Histórico'}
+                        {isClearing ? t('clearing') : t('clearAllHistory')}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Esta ação não pode ser desfeita. Isso irá permanentemente deletar todas as suas conversas e mensagens do sistema.
+                          {t('clearHistoryConfirmation')}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                         <AlertDialogAction onClick={handleClearHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          Sim, limpar tudo
+                          {t('yesClearAll')}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
-
-                <div className="pt-4 border-t">
-                  <Button onClick={handleLogout} variant="outline" className="w-full">
-                    Sair da Conta
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Botões de Ação - Movidos para o final */}
+          <div className="space-y-4">
+            <Button 
+              onClick={form.handleSubmit(handleProfileUpdate)} 
+              className="w-full"
+              size="lg"
+            >
+              {t('saveChanges')}
+            </Button>
+            
+            <Button onClick={handleLogout} variant="outline" className="w-full">
+              {t('logoutAccount')}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
