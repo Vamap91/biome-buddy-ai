@@ -5,7 +5,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MetricCard } from '@/components/MetricCard';
+import MetricCard from '@/components/MetricCard';
 import { 
   MessageSquare, 
   BarChart3, 
@@ -98,26 +98,38 @@ const Dashboard = () => {
           <MetricCard
             title={t('conversationsToday')}
             value={stats.conversationsToday.toString()}
-            icon={MessageSquare}
-            trend="+12%"
+            icon={<MessageSquare className="h-4 w-4" />}
+            trend={{
+              value: 12,
+              label: "from yesterday"
+            }}
           />
           <MetricCard
             title={t('queriesPerformed')}
             value={stats.totalMessages.toString()}
-            icon={TrendingUp}
-            trend="+8%"
+            icon={<TrendingUp className="h-4 w-4" />}
+            trend={{
+              value: 8,
+              label: "from last week"
+            }}
           />
           <MetricCard
             title={t('tokensUsed')}
             value={stats.estimatedTokens.toLocaleString()}
-            icon={Zap}
-            trend="+23%"
+            icon={<Zap className="h-4 w-4" />}
+            trend={{
+              value: 23,
+              label: "from last month"
+            }}
           />
           <MetricCard
             title="Total de Conversas"
             value={stats.totalConversations.toString()}
-            icon={Users}
-            trend="+5%"
+            icon={<Users className="h-4 w-4" />}
+            trend={{
+              value: 5,
+              label: "from last week"
+            }}
           />
         </div>
 
@@ -134,8 +146,8 @@ const Dashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {stats.recentActivity.length > 0 ? (
-                  stats.recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-muted/30">
+                  stats.recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg bg-muted/30">
                       <MessageCircle className="h-4 w-4 mt-1 text-primary" />
                       <div className="flex-1">
                         <p className="text-sm font-medium">{activity.title}</p>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChatInterface } from '@/components/ChatInterface';
+import ChatInterface from '@/components/ChatInterface';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Settings, LayoutDashboard } from 'lucide-react';

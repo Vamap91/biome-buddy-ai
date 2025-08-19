@@ -3,12 +3,18 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+interface RecentActivity {
+  id: string;
+  title: string;
+  created_at: string;
+}
+
 interface DashboardStats {
   conversationsToday: number;
   totalMessages: number;
-  tokensUsed: string;
+  estimatedTokens: number;
   totalConversations: number;
-  loading: boolean;
+  recentActivity: RecentActivity[];
 }
 
 export function useDashboardStats() {
@@ -16,16 +22,17 @@ export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats>({
     conversationsToday: 0,
     totalMessages: 0,
-    tokensUsed: '0',
+    estimatedTokens: 0,
     totalConversations: 0,
-    loading: true,
+    recentActivity: [],
   });
+  const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
     if (!user) return;
 
     try {
-      setStats(prev => ({ ...prev, loading: true }));
+      setLoading(true);
 
       // Data de hoje (início do dia)
       const today = new Date();
@@ -71,6 +78,17 @@ export function useDashboardStats() {
         console.error('Error fetching AI messages:', aiMessagesError);
       }
 
+      // Buscar atividade recente
+      const { data: recentConversations, error: recentError } = await supabase
+        .from('conversations')
+        .select('id, title, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (recentError) {
+        console.error('Error fetching recent activity:', recentError);
+      }
+
       // Calcular tokens aproximados (estimativa baseada no número de caracteres)
       const totalUserChars = (userMessages || []).reduce((acc, msg) => acc + msg.content.length, 0);
       const totalAiChars = (aiMessages || []).reduce((acc, msg) => acc + msg.content.length, 0);
@@ -78,23 +96,27 @@ export function useDashboardStats() {
       
       // Estimativa: aproximadamente 4 caracteres por token
       const estimatedTokens = Math.round(totalChars / 4);
-      const tokensFormatted = estimatedTokens > 1000 
-        ? `${(estimatedTokens / 1000).toFixed(1)}K`
-        : estimatedTokens.toString();
 
       const totalMessages = (userMessages?.length || 0) + (aiMessages?.length || 0);
+
+      const recentActivity: RecentActivity[] = (recentConversations || []).map(conv => ({
+        id: conv.id,
+        title: conv.title || 'Conversa sem título',
+        created_at: conv.created_at
+      }));
 
       setStats({
         conversationsToday: conversationsToday?.length || 0,
         totalMessages,
-        tokensUsed: tokensFormatted,
+        estimatedTokens,
         totalConversations: totalConversations?.length || 0,
-        loading: false,
+        recentActivity,
       });
 
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
-      setStats(prev => ({ ...prev, loading: false }));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,5 +126,5 @@ export function useDashboardStats() {
     }
   }, [user]);
 
-  return { stats, refreshStats: fetchStats };
+  return { stats, loading, refreshStats: fetchStats };
 }
