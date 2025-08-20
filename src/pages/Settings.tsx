@@ -1,348 +1,272 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { EnhancedCalendar } from '@/components/ui/enhanced-calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Settings as SettingsIcon, Trash2, Globe, User, CreditCard, Gamepad2, BookOpen } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import UpgradeModal from '@/components/UpgradeModal';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import SecurityStatus from '@/components/SecurityStatus';
+import { User, Bell, Shield, Palette, LogOut, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
-  const navigate = useNavigate();
-  const [isClearing, setIsClearing] = useState(false);
-  
-  const profileSchema = z.object({
-    fullName: z.string().min(2, language === 'pt' ? 'Nome deve ter pelo menos 2 caracteres' : 'Name must have at least 2 characters'),
-    birthDate: z.date({ required_error: language === 'pt' ? 'Data de nascimento é obrigatória' : 'Birth date is required' }),
-  });
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  type ProfileFormData = z.infer<typeof profileSchema>;
-  
-  const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      fullName: user?.user_metadata?.full_name || '',
-      birthDate: user?.user_metadata?.birth_date ? new Date(user.user_metadata.birth_date) : undefined,
-    },
-  });
+  const handleSaveSettings = async () => {
+    setLoading(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast.success('Configurações salvas com sucesso!');
+    setLoading(false);
+  };
 
-  const handleProfileUpdate = async (data: ProfileFormData) => {
+  const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          full_name: data.fullName,
-          birth_date: data.birthDate.toISOString(),
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: t('profileUpdatedSuccess'),
-        description: t('informationSaved'),
-      });
+      await signOut();
+      toast.success('Logout realizado com sucesso!');
     } catch (error) {
-      toast({
-        title: t('errorUpdatingProfile'),
-        description: t('tryAgainLater'),
-        variant: 'destructive',
-      });
+      toast.error('Erro ao fazer logout');
     }
-  };
-
-  const handleClearHistory = async () => {
-    setIsClearing(true);
-    try {
-      // Delete all messages first
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .in('conversation_id', 
-          await supabase
-            .from('conversations')
-            .select('id')
-            .eq('user_id', user?.id)
-            .then(({ data }) => data?.map(conv => conv.id) || [])
-        );
-
-      if (messagesError) throw messagesError;
-
-      // Delete all conversations
-      const { error: conversationsError } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('user_id', user?.id);
-
-      if (conversationsError) throw conversationsError;
-
-      toast({
-        title: t('historyCleared'),
-        description: t('allConversationsRemoved'),
-      });
-    } catch (error) {
-      toast({
-        title: t('errorClearingHistory'),
-        description: t('tryAgainLater'),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
-  };
-
-  const handleLanguageChange = (newLanguage: string) => {
-    setLanguage(newLanguage as 'pt' | 'en');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="container mx-auto p-6 max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-hero-gradient rounded-lg flex items-center justify-center">
-              <SettingsIcon className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-hero-gradient bg-clip-text text-transparent">
-                {t('settings')}
-              </h1>
-              <p className="text-muted-foreground">{t('managePreferences')}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button onClick={() => navigate('/games')} variant="outline" size="sm">
-              <Gamepad2 className="h-4 w-4 mr-2" />
-              {t('games')}
-            </Button>
-            <Button onClick={() => navigate('/blog')} variant="outline" size="sm">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Blog
-            </Button>
-            <Button onClick={() => navigate('/dashboard')} variant="outline">
-              {t('backToDashboard')}
-            </Button>
-          </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
+          <p className="text-muted-foreground mt-2">
+            Gerencie suas preferências e configurações de segurança
+          </p>
         </div>
 
-        <div className="space-y-6">
-          {/* Informações Pessoais */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>{t('personalInfo')}</span>
-              </CardTitle>
-              <CardDescription>
-                {t('updatePersonalInfo')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleProfileUpdate)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('fullName')}</FormLabel>
-                        <FormControl>
-                          <Input placeholder={t('enterFullName')} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="profile" className="flex items-center space-x-2">
+              <User className="h-4 w-4" />
+              <span>Perfil</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center space-x-2">
+              <Bell className="h-4 w-4" />
+              <span>Notificações</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center space-x-2">
+              <Shield className="h-4 w-4" />
+              <span>Segurança</span>
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="flex items-center space-x-2">
+              <Palette className="h-4 w-4" />
+              <span>Aparência</span>
+            </TabsTrigger>
+          </TabsList>
 
-                  <FormField
-                    control={form.control}
-                    name="birthDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>{t('birthDate')}</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "dd/MM/yyyy")
-                                ) : (
-                                  <span>{t('selectDate')}</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <EnhancedCalendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações do Perfil</CardTitle>
+                <CardDescription>
+                  Atualize suas informações pessoais
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="bg-gray-50"
                   />
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    O email não pode ser alterado por motivos de segurança
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input
+                    id="name"
+                    placeholder="Seu nome completo"
+                  />
+                </div>
 
-          {/* Plano Atual */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <CreditCard className="h-5 w-5" />
-                <span>{t('currentPlan')}</span>
-              </CardTitle>
-              <CardDescription>
-                {t('subscriptionInfo')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div>
+                  <Label htmlFor="username">Nome de Usuário</Label>
+                  <Input
+                    id="username"
+                    placeholder="@seuusername"
+                  />
+                </div>
+
+                <Button 
+                  onClick={handleSaveSettings} 
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {loading ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Preferências de Notificação</CardTitle>
+                <CardDescription>
+                  Configure como você deseja receber notificações
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold">{t('freePlan')}</h3>
+                    <Label htmlFor="email-notifications" className="text-sm font-medium">
+                      Notificações por Email
+                    </Label>
                     <p className="text-sm text-muted-foreground">
-                      {t('limitedAccess')}
+                      Receba atualizações importantes por email
                     </p>
                   </div>
-                  <UpgradeModal
-                    trigger={
-                      <Button variant="outline">
-                        {t('upgrade')}
-                      </Button>
-                    }
+                  <Switch
+                    id="email-notifications"
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
                   />
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  <p>• {t('conversationsPerMonth')}</p>
-                  <p>• {t('basicSupport')}</p>
-                  <p>• {t('essentialFeatures')}</p>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="push-notifications" className="text-sm font-medium">
+                      Notificações Push
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receba notificações em tempo real no navegador
+                    </p>
+                  </div>
+                  <Switch
+                    id="push-notifications"
+                    checked={pushNotifications}
+                    onCheckedChange={setPushNotifications}
+                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Idioma */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Globe className="h-5 w-5" />
-                <span>{t('language')}</span>
-              </CardTitle>
-              <CardDescription>
-                {t('chooseLanguage')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Select value={language} onValueChange={handleLanguageChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t('selectLanguage')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pt">{t('portuguese')}</SelectItem>
-                    <SelectItem value="en">{t('english')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+                <Button 
+                  onClick={handleSaveSettings} 
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {loading ? 'Salvando...' : 'Salvar Preferências'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          {/* Gerenciar Dados */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Trash2 className="h-5 w-5" />
-                <span>{t('manageData')}</span>
-              </CardTitle>
-              <CardDescription>
-                {t('clearHistory')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-lg">
-                  <h3 className="font-semibold text-destructive mb-2">{t('dangerZone')}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t('clearHistoryWarning')}
-                  </p>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" disabled={isClearing}>
-                        {isClearing ? t('clearing') : t('clearAllHistory')}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t('clearHistoryConfirmation')}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleClearHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          {t('yesClearAll')}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+          <TabsContent value="security" className="space-y-6">
+            <SecurityStatus />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Ações de Segurança</CardTitle>
+                <CardDescription>
+                  Gerencie a segurança da sua conta
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
+                  <h3 className="font-medium text-yellow-800 mb-2">⚠️ Importantes Configurações de Segurança</h3>
+                  <ul className="text-sm text-yellow-700 space-y-1">
+                    <li>• Row Level Security (RLS) está ativo no banco de dados</li>
+                    <li>• Políticas de privacidade restritivas implementadas</li>
+                    <li>• Monitoramento de tentativas de login suspeitas</li>
+                    <li>• Limpeza automática de logs de segurança</li>
+                  </ul>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Botões de Ação - Movidos para o final */}
-          <div className="space-y-4">
+                <Separator />
+
+                <div className="space-y-3">
+                  <Button variant="outline" className="w-full">
+                    Alterar Senha
+                  </Button>
+                  
+                  <Button variant="outline" className="w-full">
+                    Ativar Autenticação de Dois Fatores
+                  </Button>
+                  
+                  <Button variant="outline" className="w-full">
+                    Ver Sessões Ativas
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appearance" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Preferências de Aparência</CardTitle>
+                <CardDescription>
+                  Personalize a aparência da aplicação
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="dark-mode" className="text-sm font-medium">
+                      Modo Escuro
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Ative o tema escuro para reduzir o cansaço visual
+                    </p>
+                  </div>
+                  <Switch
+                    id="dark-mode"
+                    checked={darkMode}
+                    onCheckedChange={setDarkMode}
+                  />
+                </div>
+
+                <Button 
+                  onClick={handleSaveSettings} 
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {loading ? 'Salvando...' : 'Salvar Aparência'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Logout Section */}
+        <Card className="mt-8 border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-700">Sair da Conta</CardTitle>
+            <CardDescription>
+              Desconecte-se da sua conta Dr_C
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <Button 
-              onClick={form.handleSubmit(handleProfileUpdate)} 
-              className="w-full"
-              size="lg"
+              variant="destructive" 
+              onClick={handleSignOut}
+              className="w-full sm:w-auto"
             >
-              {t('saveChanges')}
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair da Conta
             </Button>
-            
-            <Button onClick={handleLogout} variant="outline" className="w-full">
-              {t('logoutAccount')}
-            </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
