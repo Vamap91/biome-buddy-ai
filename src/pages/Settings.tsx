@@ -1,22 +1,22 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import SecurityStatus from '@/components/SecurityStatus';
-import { User, Bell, Shield, Palette, LogOut, Save } from 'lucide-react';
+import { User, Bell, Globe, LogOut, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSaveSettings = async () => {
@@ -36,6 +36,11 @@ const Settings = () => {
     }
   };
 
+  const handleLanguageChange = (newLanguage: 'pt' | 'en') => {
+    setLanguage(newLanguage);
+    toast.success('Idioma alterado com sucesso!');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -47,7 +52,7 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center space-x-2">
               <User className="h-4 w-4" />
               <span>Perfil</span>
@@ -56,13 +61,9 @@ const Settings = () => {
               <Bell className="h-4 w-4" />
               <span>Notificações</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center space-x-2">
-              <Shield className="h-4 w-4" />
-              <span>Segurança</span>
-            </TabsTrigger>
-            <TabsTrigger value="appearance" className="flex items-center space-x-2">
-              <Palette className="h-4 w-4" />
-              <span>Aparência</span>
+            <TabsTrigger value="language" className="flex items-center space-x-2">
+              <Globe className="h-4 w-4" />
+              <span>Idioma</span>
             </TabsTrigger>
           </TabsList>
 
@@ -170,69 +171,26 @@ const Settings = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="security" className="space-y-6">
-            <SecurityStatus />
-
+          <TabsContent value="language" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Ações de Segurança</CardTitle>
+                <CardTitle>Preferências de Idioma</CardTitle>
                 <CardDescription>
-                  Gerencie a segurança da sua conta
+                  Escolha o idioma da interface
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
-                  <h3 className="font-medium text-yellow-800 mb-2">⚠️ Importantes Configurações de Segurança</h3>
-                  <ul className="text-sm text-yellow-700 space-y-1">
-                    <li>• Row Level Security (RLS) está ativo no banco de dados</li>
-                    <li>• Políticas de privacidade restritivas implementadas</li>
-                    <li>• Monitoramento de tentativas de login suspeitas</li>
-                    <li>• Limpeza automática de logs de segurança</li>
-                  </ul>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full">
-                    Alterar Senha
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full">
-                    Ativar Autenticação de Dois Fatores
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full">
-                    Ver Sessões Ativas
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="appearance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferências de Aparência</CardTitle>
-                <CardDescription>
-                  Personalize a aparência da aplicação
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="dark-mode" className="text-sm font-medium">
-                      Modo Escuro
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Ative o tema escuro para reduzir o cansaço visual
-                    </p>
-                  </div>
-                  <Switch
-                    id="dark-mode"
-                    checked={darkMode}
-                    onCheckedChange={setDarkMode}
-                  />
+                <div>
+                  <Label htmlFor="language-select">Idioma</Label>
+                  <Select value={language} onValueChange={handleLanguageChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione o idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pt">Português</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <Button 
@@ -241,7 +199,7 @@ const Settings = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {loading ? 'Salvando...' : 'Salvar Aparência'}
+                  {loading ? 'Salvando...' : 'Salvar Idioma'}
                 </Button>
               </CardContent>
             </Card>
