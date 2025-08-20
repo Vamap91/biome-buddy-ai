@@ -1,14 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Heart, MessageCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Post {
   id: string;
   content: string;
   video_url: string | null;
+  image_url?: string | null;
   created_at: string;
   user_id: string;
   profiles: {
@@ -16,6 +22,8 @@ interface Post {
     full_name: string;
     avatar_url: string | null;
   };
+  likes_count?: number;
+  user_has_liked?: boolean;
 }
 
 interface PostsFeedProps {
@@ -24,6 +32,30 @@ interface PostsFeedProps {
 }
 
 const PostsFeed: React.FC<PostsFeedProps> = ({ posts, loading }) => {
+  const { user } = useAuth();
+  const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
+
+  const handleLike = async (postId: string) => {
+    if (!user || likingPosts.has(postId)) return;
+
+    setLikingPosts(prev => new Set(prev).add(postId));
+
+    try {
+      // For now, we'll just show a toast. The actual like functionality would require
+      // additional database tables for likes that we haven't created yet.
+      toast.success('Like adicionado!');
+    } catch (error) {
+      console.error('Error liking post:', error);
+      toast.error('Erro ao curtir post');
+    } finally {
+      setLikingPosts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -90,10 +122,40 @@ const PostsFeed: React.FC<PostsFeedProps> = ({ posts, loading }) => {
               <video
                 src={post.video_url}
                 controls
-                className="w-full rounded-lg"
+                className="w-full rounded-lg mb-4"
                 style={{ maxHeight: '400px' }}
               />
             )}
+
+            {post.image_url && (
+              <img
+                src={post.image_url}
+                alt="Post content"
+                className="w-full rounded-lg mb-4 object-cover"
+                style={{ maxHeight: '400px' }}
+              />
+            )}
+
+            <div className="flex items-center gap-4 pt-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleLike(post.id)}
+                disabled={likingPosts.has(post.id)}
+                className="text-muted-foreground hover:text-red-500"
+              >
+                <Heart className="h-4 w-4 mr-1" />
+                Curtir
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-blue-500"
+              >
+                <MessageCircle className="h-4 w-4 mr-1" />
+                Comentar
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}

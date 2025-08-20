@@ -17,48 +17,57 @@ interface CreatePostFormProps {
 const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel }) => {
   const { user } = useAuth();
   const [content, setContent] = useState('');
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<'video' | 'image' | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.type.startsWith('video/')) {
-        setVideoFile(file);
+        setMediaFile(file);
+        setMediaType('video');
         const url = URL.createObjectURL(file);
-        setVideoPreview(url);
+        setMediaPreview(url);
+      } else if (file.type.startsWith('image/')) {
+        setMediaFile(file);
+        setMediaType('image');
+        const url = URL.createObjectURL(file);
+        setMediaPreview(url);
       } else {
-        toast.error('Por favor, selecione apenas arquivos de vídeo');
+        toast.error('Por favor, selecione apenas arquivos de vídeo ou imagem');
       }
     }
   };
 
-  const removeVideo = () => {
-    setVideoFile(null);
-    if (videoPreview) {
-      URL.revokeObjectURL(videoPreview);
-      setVideoPreview(null);
+  const removeMedia = () => {
+    setMediaFile(null);
+    setMediaType(null);
+    if (mediaPreview) {
+      URL.revokeObjectURL(mediaPreview);
+      setMediaPreview(null);
     }
   };
 
-  const uploadVideo = async (file: File): Promise<string | null> => {
+  const uploadMedia = async (file: File): Promise<string | null> => {
     if (!user) return null;
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+    const bucketName = file.type.startsWith('video/') ? 'post-videos' : 'post-images';
 
     const { error: uploadError } = await supabase.storage
-      .from('post-videos')
+      .from(bucketName)
       .upload(fileName, file);
 
     if (uploadError) {
-      console.error('Error uploading video:', uploadError);
+      console.error('Error uploading media:', uploadError);
       return null;
     }
 
     const { data } = supabase.storage
-      .from('post-videos')
+      .from(bucketName)
       .getPublicUrl(fileName);
 
     return data.publicUrl;
@@ -67,34 +76,39 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || (!content.trim() && !videoFile)) {
-      toast.error('Adicione um texto ou vídeo para criar o post');
+    if (!user || (!content.trim() && !mediaFile)) {
+      toast.error('Adicione um texto, vídeo ou imagem para criar o post');
       return;
     }
 
     setUploading(true);
 
     try {
-      let videoUrl = null;
+      let mediaUrl = null;
       
-      if (videoFile) {
-        videoUrl = await uploadVideo(videoFile);
-        if (!videoUrl) {
-          toast.error('Erro ao fazer upload do vídeo');
+      if (mediaFile) {
+        mediaUrl = await uploadMedia(mediaFile);
+        if (!mediaUrl) {
+          toast.error('Erro ao fazer upload da mídia');
           setUploading(false);
           return;
         }
       }
 
+      const postData: any = {
+        user_id: user.id,
+        content: content.trim() || null,
+      };
+
+      if (mediaType === 'video') {
+        postData.video_url = mediaUrl;
+      } else if (mediaType === 'image') {
+        postData.image_url = mediaUrl;
+      }
+
       const { error } = await supabase
         .from('posts')
-        .insert([
-          {
-            user_id: user.id,
-            content: content.trim() || null,
-            video_url: videoUrl,
-          },
-        ]);
+        .insert([postData]);
 
       if (error) {
         console.error('Error creating post:', error);
@@ -132,45 +146,53 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
           </div>
 
           <div>
-            <label htmlFor="video-upload" className="block text-sm font-medium mb-2">
-              Adicionar Vídeo (opcional)
+            <label htmlFor="media-upload" className="block text-sm font-medium mb-2">
+              Adicionar Mídia (opcional)
             </label>
             <div className="flex items-center gap-4">
               <Input
-                id="video-upload"
+                id="media-upload"
                 type="file"
-                accept="video/*"
-                onChange={handleVideoChange}
+                accept="video/*,image/*"
+                onChange={handleMediaChange}
                 className="hidden"
               />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => document.getElementById('video-upload')?.click()}
+                onClick={() => document.getElementById('media-upload')?.click()}
               >
                 <Video className="h-4 w-4 mr-2" />
-                Selecionar Vídeo
+                Selecionar Mídia
               </Button>
-              {videoFile && (
+              {mediaFile && (
                 <span className="text-sm text-muted-foreground">
-                  {videoFile.name}
+                  {mediaFile.name}
                 </span>
               )}
             </div>
           </div>
 
-          {videoPreview && (
+          {mediaPreview && (
             <div className="relative">
-              <video
-                src={videoPreview}
-                controls
-                className="w-full max-h-64 rounded-lg"
-              />
+              {mediaType === 'video' ? (
+                <video
+                  src={mediaPreview}
+                  controls
+                  className="w-full max-h-64 rounded-lg"
+                />
+              ) : (
+                <img
+                  src={mediaPreview}
+                  alt="Preview"
+                  className="w-full max-h-64 rounded-lg object-cover"
+                />
+              )}
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={removeVideo}
+                onClick={removeMedia}
                 className="absolute top-2 right-2"
               >
                 <X className="h-4 w-4" />
@@ -181,7 +203,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
           <div className="flex gap-3 pt-4">
             <Button
               type="submit"
-              disabled={uploading || (!content.trim() && !videoFile)}
+              disabled={uploading || (!content.trim() && !mediaFile)}
               className="bg-green-600 hover:bg-green-700"
             >
               {uploading ? (
