@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, BookOpen, Settings, LogIn, Users, Video, Leaf, Star, TrendingUp, Globe, Heart, PlayCircle } from "lucide-react";
@@ -19,7 +18,7 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
                 <Leaf className="h-10 w-10 text-white" />
               </div>
-              <span className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent">Dr_C v2.0</span>
+              <span className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent">Dr_C</span>
             </div>
             
             <h1 className="text-3xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -344,10 +343,10 @@ const Index = () => {
               <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
                 <Leaf className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-bold">Dr_C v2.0</span>
+              <span className="text-2xl font-bold">Dr_C</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-400">
-              <span>© 2024 Dr_C v2.0. Feito com</span>
+              <span>© 2024 Dr_C. Feito com</span>
               <Heart className="h-4 w-4 text-red-400 fill-current" />
               <span>para a biodiversidade.</span>
             </div>

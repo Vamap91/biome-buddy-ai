@@ -20,7 +20,7 @@ const AuthCard = ({ title, description, children, className = "" }: AuthCardProp
             <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center shadow-lg">
               <Leaf className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-gray-900">Dr_C v2.0</span>
+            <span className="text-2xl font-bold text-gray-900">Dr_C</span>
           </div>
           <p className="text-gray-600 text-sm">Plataforma de Biodiversidade com IA</p>
         </div>
@@ -40,7 +40,7 @@ const AuthCard = ({ title, description, children, className = "" }: AuthCardProp
 
         {/* Footer */}
         <div className="text-center mt-6 text-gray-500 text-sm">
-          <p>© 2024 Dr_C v2.0. Feito com 💚 para a biodiversidade.</p>
+          <p>© 2024 Dr_C. Feito com 💚 para a biodiversidade.</p>
         </div>
       </div>
     </div>
