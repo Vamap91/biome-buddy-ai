@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Bell, Globe, LogOut, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -18,13 +19,86 @@ const Settings = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+
+  // Load user profile data when component mounts
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading profile:', error);
+          return;
+        }
+
+        if (profile) {
+          setFullName(profile.full_name || '');
+          setUsername(profile.username || '');
+        }
+      } catch (error) {
+        console.error('Unexpected error loading profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, [user?.id]);
 
   const handleSaveSettings = async () => {
+    if (!user?.id) {
+      toast.error(t('errorUpdatingProfile'));
+      return;
+    }
+
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success(t('profileUpdatedSuccess'));
-    setLoading(false);
+    
+    try {
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (existingProfile) {
+        // Update existing profile
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            full_name: fullName,
+            username: username,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new profile
+        const { error } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: fullName,
+            username: username
+          });
+
+        if (error) throw error;
+      }
+
+      toast.success(t('profileUpdatedSuccess'));
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error(t('errorUpdatingProfile'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -95,6 +169,8 @@ const Settings = () => {
                   <Input
                     id="name"
                     placeholder={t('enterFullName')}
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                   />
                 </div>
 
@@ -103,6 +179,8 @@ const Settings = () => {
                   <Input
                     id="username"
                     placeholder={language === 'pt' ? '@seuusername' : '@yourusername'}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
 
