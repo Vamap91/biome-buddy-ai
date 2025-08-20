@@ -261,6 +261,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      log_failed_login_attempt: {
+        Args: { p_email: string; p_user_agent?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
