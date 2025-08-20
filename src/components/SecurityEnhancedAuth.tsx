@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, Shield, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Shield, AlertTriangle, UserPlus, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SecurityEnhancedAuthProps {
@@ -14,14 +14,17 @@ interface SecurityEnhancedAuthProps {
 }
 
 const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
-  const { signIn, loading } = useAuth();
+  const { signIn, signUp, loading } = useAuth();
   const { logFailedLoginAttempt } = useSecurityLogger();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockEndTime, setLockEndTime] = useState<Date | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -60,36 +63,61 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
       return;
     }
 
+    // Additional validation for sign up
+    if (isSignUp && password !== confirmPassword) {
+      toast.error('As senhas não coincidem.');
+      return;
+    }
+
     try {
-      const { error } = await signIn(email, password);
-
-      if (error) {
-        // Log failed login attempt
-        await logFailedLoginAttempt(email);
+      if (isSignUp) {
+        // Handle sign up
+        const { error } = await signUp(email, password);
         
-        const newFailedAttempts = failedAttempts + 1;
-        setFailedAttempts(newFailedAttempts);
-
-        // Lock account after 5 failed attempts for 15 minutes
-        if (newFailedAttempts >= 5) {
-          setIsLocked(true);
-          const lockTime = new Date();
-          lockTime.setMinutes(lockTime.getMinutes() + 15);
-          setLockEndTime(lockTime);
-          toast.error('Muitas tentativas falharam. Conta bloqueada por 15 minutos por segurança.');
+        if (error) {
+          if (error.message.includes('already registered')) {
+            toast.error('Este email já está cadastrado. Tente fazer login.');
+          } else {
+            toast.error(`Erro no cadastro: ${error.message}`);
+          }
         } else {
-          toast.error(`Login falhou. ${5 - newFailedAttempts} tentativas restantes.`);
+          toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
+          setIsSignUp(false); // Switch back to login after successful signup
+          setPassword('');
+          setConfirmPassword('');
         }
       } else {
-        // Reset failed attempts on successful login
-        setFailedAttempts(0);
-        setIsLocked(false);
-        setLockEndTime(null);
-        toast.success('Login realizado com sucesso!');
-        onSuccess?.();
+        // Handle sign in
+        const { error } = await signIn(email, password);
+
+        if (error) {
+          // Log failed login attempt
+          await logFailedLoginAttempt(email);
+          
+          const newFailedAttempts = failedAttempts + 1;
+          setFailedAttempts(newFailedAttempts);
+
+          // Lock account after 5 failed attempts for 15 minutes
+          if (newFailedAttempts >= 5) {
+            setIsLocked(true);
+            const lockTime = new Date();
+            lockTime.setMinutes(lockTime.getMinutes() + 15);
+            setLockEndTime(lockTime);
+            toast.error('Muitas tentativas falharam. Conta bloqueada por 15 minutos por segurança.');
+          } else {
+            toast.error(`Login falhou. ${5 - newFailedAttempts} tentativas restantes.`);
+          }
+        } else {
+          // Reset failed attempts on successful login
+          setFailedAttempts(0);
+          setIsLocked(false);
+          setLockEndTime(null);
+          toast.success('Login realizado com sucesso!');
+          onSuccess?.();
+        }
       }
     } catch (err) {
-      console.error('Unexpected login error:', err);
+      console.error('Unexpected auth error:', err);
       toast.error('Erro inesperado. Tente novamente.');
     }
   };
@@ -100,10 +128,18 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
         <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
           <Shield className="h-6 w-6 text-green-600" />
         </div>
-        <CardTitle className="text-2xl font-bold">Login Seguro</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          {isSignUp ? 'Criar Conta' : 'Login Seguro'}
+        </CardTitle>
+        <p className="text-sm text-gray-600">
+          {isSignUp 
+            ? 'Crie sua conta na plataforma Dr_C' 
+            : 'Entre na sua conta da plataforma Dr_C'
+          }
+        </p>
       </CardHeader>
       <CardContent>
-        {(failedAttempts >= 3 || isLocked) && (
+        {(failedAttempts >= 3 || isLocked) && !isSignUp && (
           <Alert className="mb-4 border-yellow-200 bg-yellow-50">
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-800">
@@ -127,7 +163,7 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
               required
-              disabled={loading || isLocked}
+              disabled={loading || (!isSignUp && isLocked)}
               className="w-full"
             />
           </div>
@@ -144,28 +180,94 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Sua senha"
                 required
-                disabled={loading || isLocked}
+                disabled={loading || (!isSignUp && isLocked)}
                 className="w-full pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                disabled={loading || isLocked}
+                disabled={loading || (!isSignUp && isLocked)}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
 
+          {isSignUp && (
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                Confirmar Senha
+              </label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirme sua senha"
+                  required
+                  disabled={loading}
+                  className="w-full pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  disabled={loading}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          )}
+
           <Button
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700"
-            disabled={loading || isLocked}
+            disabled={loading || (!isSignUp && isLocked)}
           >
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? (
+              'Processando...'
+            ) : (
+              <>
+                {isSignUp ? (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Criar Conta
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Entrar
+                  </>
+                )}
+              </>
+            )}
           </Button>
         </form>
+
+        {/* Toggle between Sign In and Sign Up */}
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setPassword('');
+              setConfirmPassword('');
+              setFailedAttempts(0);
+              setIsLocked(false);
+              setLockEndTime(null);
+            }}
+            className="text-green-600 hover:text-green-700 text-sm font-medium"
+            disabled={loading}
+          >
+            {isSignUp 
+              ? 'Já tem uma conta? Fazer login' 
+              : 'Não tem uma conta? Criar conta'
+            }
+          </button>
+        </div>
 
         <div className="mt-4 text-xs text-gray-500 text-center">
           <p>🔒 Sua conta está protegida por:</p>
