@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +36,7 @@ const Posts = () => {
           video_url,
           created_at,
           user_id,
-          profiles (
+          profiles!posts_user_id_fkey (
             username,
             full_name,
             avatar_url
