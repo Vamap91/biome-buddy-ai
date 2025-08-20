@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -12,8 +11,7 @@ import {
   MessageCircle,
   Calendar,
   Gamepad2,
-  BookOpen,
-  PlusCircle
+  BookOpen
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -101,31 +99,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Quick Access Buttons Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Posts Button */}
-          <Card className="bg-green-600 border-0 hover:bg-green-700 transition-colors cursor-pointer" onClick={() => navigate('/posts')}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="text-white">
-                  <h2 className="text-xl font-semibold mb-2">Posts</h2>
-                  <p className="text-white/80">Crie e compartilhe conteúdo</p>
-                </div>
-                <Button 
-                  variant="secondary" 
-                  size="lg"
-                  className="bg-white text-green-600 hover:bg-white/90"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/posts');
-                  }}
-                >
-                  <PlusCircle className="h-5 w-5 mr-2" />
-                  Posts
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Blog Button */}
           <Card className="bg-green-600 border-0 hover:bg-green-700 transition-colors cursor-pointer" onClick={() => navigate('/blog')}>
             <CardContent className="p-6">
