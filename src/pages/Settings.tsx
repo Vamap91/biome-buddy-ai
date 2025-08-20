@@ -23,14 +23,14 @@ const Settings = () => {
     setLoading(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success('Configurações salvas com sucesso!');
+    toast.success(t('profileUpdatedSuccess'));
     setLoading(false);
   };
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast.success('Logout realizado com sucesso!');
+      toast.success(t('logoutAccount'));
     } catch (error) {
       toast.error('Erro ao fazer logout');
     }
@@ -38,16 +38,16 @@ const Settings = () => {
 
   const handleLanguageChange = (newLanguage: 'pt' | 'en') => {
     setLanguage(newLanguage);
-    toast.success('Idioma alterado com sucesso!');
+    toast.success(language === 'pt' ? 'Idioma alterado com sucesso!' : 'Language changed successfully!');
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('settings')}</h1>
           <p className="text-muted-foreground mt-2">
-            Gerencie suas preferências e configurações de segurança
+            {t('managePreferences')}
           </p>
         </div>
 
@@ -55,24 +55,24 @@ const Settings = () => {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center space-x-2">
               <User className="h-4 w-4" />
-              <span>Perfil</span>
+              <span>{t('personalInfo')}</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center space-x-2">
               <Bell className="h-4 w-4" />
-              <span>Notificações</span>
+              <span>{t('notifications') || 'Notificações'}</span>
             </TabsTrigger>
             <TabsTrigger value="language" className="flex items-center space-x-2">
               <Globe className="h-4 w-4" />
-              <span>Idioma</span>
+              <span>{t('language')}</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Informações do Perfil</CardTitle>
+                <CardTitle>{t('personalInfo')}</CardTitle>
                 <CardDescription>
-                  Atualize suas informações pessoais
+                  {t('updatePersonalInfo')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -86,23 +86,23 @@ const Settings = () => {
                     className="bg-gray-50"
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    O email não pode ser alterado por motivos de segurança
+                    {language === 'pt' ? 'O email não pode ser alterado por motivos de segurança' : 'Email cannot be changed for security reasons'}
                   </p>
                 </div>
                 
                 <div>
-                  <Label htmlFor="name">Nome Completo</Label>
+                  <Label htmlFor="name">{t('fullName')}</Label>
                   <Input
                     id="name"
-                    placeholder="Seu nome completo"
+                    placeholder={t('enterFullName')}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="username">Nome de Usuário</Label>
+                  <Label htmlFor="username">{language === 'pt' ? 'Nome de Usuário' : 'Username'}</Label>
                   <Input
                     id="username"
-                    placeholder="@seuusername"
+                    placeholder={language === 'pt' ? '@seuusername' : '@yourusername'}
                   />
                 </div>
 
@@ -112,7 +112,7 @@ const Settings = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {loading ? 'Salvando...' : 'Salvar Alterações'}
+                  {loading ? t('processing') : t('saveChanges')}
                 </Button>
               </CardContent>
             </Card>
@@ -121,19 +121,19 @@ const Settings = () => {
           <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Preferências de Notificação</CardTitle>
+                <CardTitle>{language === 'pt' ? 'Preferências de Notificação' : 'Notification Preferences'}</CardTitle>
                 <CardDescription>
-                  Configure como você deseja receber notificações
+                  {language === 'pt' ? 'Configure como você deseja receber notificações' : 'Configure how you want to receive notifications'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label htmlFor="email-notifications" className="text-sm font-medium">
-                      Notificações por Email
+                      {language === 'pt' ? 'Notificações por Email' : 'Email Notifications'}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Receba atualizações importantes por email
+                      {language === 'pt' ? 'Receba atualizações importantes por email' : 'Receive important updates by email'}
                     </p>
                   </div>
                   <Switch
@@ -146,10 +146,10 @@ const Settings = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label htmlFor="push-notifications" className="text-sm font-medium">
-                      Notificações Push
+                      {language === 'pt' ? 'Notificações Push' : 'Push Notifications'}
                     </Label>
                     <p className="text-sm text-muted-foreground">
-                      Receba notificações em tempo real no navegador
+                      {language === 'pt' ? 'Receba notificações em tempo real no navegador' : 'Receive real-time notifications in the browser'}
                     </p>
                   </div>
                   <Switch
@@ -165,7 +165,7 @@ const Settings = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {loading ? 'Salvando...' : 'Salvar Preferências'}
+                  {loading ? t('processing') : (language === 'pt' ? 'Salvar Preferências' : 'Save Preferences')}
                 </Button>
               </CardContent>
             </Card>
@@ -174,21 +174,21 @@ const Settings = () => {
           <TabsContent value="language" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Preferências de Idioma</CardTitle>
+                <CardTitle>{language === 'pt' ? 'Preferências de Idioma' : 'Language Preferences'}</CardTitle>
                 <CardDescription>
-                  Escolha o idioma da interface
+                  {t('chooseLanguage')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="language-select">Idioma</Label>
+                  <Label htmlFor="language-select">{t('language')}</Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecione o idioma" />
+                      <SelectValue placeholder={t('selectLanguage')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pt">Português</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="pt">{t('portuguese')}</SelectItem>
+                      <SelectItem value="en">{t('english')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -199,7 +199,7 @@ const Settings = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {loading ? 'Salvando...' : 'Salvar Idioma'}
+                  {loading ? t('processing') : (language === 'pt' ? 'Salvar Idioma' : 'Save Language')}
                 </Button>
               </CardContent>
             </Card>
@@ -209,9 +209,9 @@ const Settings = () => {
         {/* Logout Section */}
         <Card className="mt-8 border-red-200">
           <CardHeader>
-            <CardTitle className="text-red-700">Sair da Conta</CardTitle>
+            <CardTitle className="text-red-700">{t('logoutAccount')}</CardTitle>
             <CardDescription>
-              Desconecte-se da sua conta Dr_C
+              {language === 'pt' ? 'Desconecte-se da sua conta Dr_C' : 'Disconnect from your Dr_C account'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -221,7 +221,7 @@ const Settings = () => {
               className="w-full sm:w-auto"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Sair da Conta
+              {t('logoutAccount')}
             </Button>
           </CardContent>
         </Card>
