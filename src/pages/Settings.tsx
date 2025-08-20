@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -18,6 +19,7 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import UpgradeModal from '@/components/UpgradeModal';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -239,9 +241,13 @@ const Settings = () => {
                       {t('limitedAccess')}
                     </p>
                   </div>
-                  <Button variant="outline">
-                    {t('upgrade')}
-                  </Button>
+                  <UpgradeModal
+                    trigger={
+                      <Button variant="outline">
+                        {t('upgrade')}
+                      </Button>
+                    }
+                  />
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <p>• {t('conversationsPerMonth')}</p>
