@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Post {
@@ -78,7 +77,6 @@ const PostsFeed: React.FC<PostsFeedProps> = ({ posts, loading }) => {
                 <p className="text-sm text-muted-foreground">
                   {formatDistanceToNow(new Date(post.created_at), {
                     addSuffix: true,
-                    locale: ptBR,
                   })}
                 </p>
               </div>

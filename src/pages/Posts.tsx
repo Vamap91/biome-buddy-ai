@@ -31,8 +31,12 @@ const Posts = () => {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
-          profiles (
+          id,
+          content,
+          video_url,
+          created_at,
+          user_id,
+          profiles!posts_user_id_fkey (
             username,
             full_name,
             avatar_url
