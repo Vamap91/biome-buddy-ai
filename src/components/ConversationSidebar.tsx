@@ -1,23 +1,14 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Plus, 
-  MessageSquare, 
-  Trash2, 
-  MoreVertical,
-  Search
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { Plus, MessageSquare, Trash2, Globe } from 'lucide-react';
+import { Button } from './ui/button';
+import { ScrollArea } from './ui/scroll-area';
+import { Skeleton } from './ui/skeleton';
 
 interface Conversation {
   id: string;
   title: string;
   created_at: string;
-  updated_at: string;
 }
 
 interface ConversationSidebarProps {
@@ -26,7 +17,7 @@ interface ConversationSidebarProps {
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
-  loading?: boolean;
+  loading: boolean;
 }
 
 const ConversationSidebar = ({
@@ -35,101 +26,79 @@ const ConversationSidebar = ({
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
-  loading = false
+  loading
 }: ConversationSidebarProps) => {
-  const [searchTerm, setSearchTerm] = React.useState('');
-
-  const filteredConversations = conversations.filter(conv =>
-    conv.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return 'Hoje';
-    if (diffDays === 2) return 'Ontem';
-    if (diffDays <= 7) return `${diffDays} dias atrás`;
-    
-    return date.toLocaleDateString('pt-BR', { 
-      day: '2-digit', 
-      month: '2-digit' 
-    });
-  };
-
   return (
-    <div className="w-80 bg-card border-r border-border flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <Button 
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+      {/* Header com ícone Globe */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Globe className="h-6 w-6 text-green-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Dr_C</h2>
+        </div>
+        <Button
           onClick={onNewConversation}
-          className="w-full bg-hero-gradient hover:opacity-90 text-white"
+          className="w-full bg-green-600 hover:bg-green-700 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nova Conversa
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar conversas..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      {/* Conversations List */}
-      <ScrollArea className="flex-1 px-2">
-        {loading ? (
-          <div className="p-4 text-center text-muted-foreground">
-            Carregando conversas...
-          </div>
-        ) : filteredConversations.length === 0 ? (
-          <div className="p-4 text-center text-muted-foreground">
-            {searchTerm ? 'Nenhuma conversa encontrada' : 'Nenhuma conversa ainda'}
-          </div>
-        ) : (
-          <div className="space-y-1 pb-4">
-            {filteredConversations.map((conversation) => (
-              <div
-                key={conversation.id}
-                className={cn(
-                  "group relative flex items-center p-3 rounded-lg cursor-pointer hover:bg-accent transition-colors",
-                  currentConversation === conversation.id ? "bg-accent" : ""
-                )}
-                onClick={() => onSelectConversation(conversation.id)}
-              >
-                <MessageSquare className="h-4 w-4 text-muted-foreground mr-3 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {conversation.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDate(conversation.updated_at)}
-                  </p>
+      {/* Lista de conversas */}
+      <ScrollArea className="flex-1">
+        <div className="p-2">
+          {loading ? (
+            // Loading skeleton
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="p-3 rounded-md">
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-3 w-2/3" />
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 ml-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteConversation(conversation.id);
-                  }}
+              ))}
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Nenhuma conversa ainda</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {conversations.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className={`group relative p-3 rounded-md cursor-pointer transition-colors ${
+                    currentConversation === conversation.id
+                      ? 'bg-green-50 border border-green-200'
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => onSelectConversation(conversation.id)}
                 >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {conversation.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(conversation.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteConversation(conversation.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
+                    >
+                      <Trash2 className="h-3 w-3 text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </ScrollArea>
     </div>
   );
