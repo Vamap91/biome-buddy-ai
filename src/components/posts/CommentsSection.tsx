@@ -17,7 +17,7 @@ interface Comment {
     username: string;
     full_name: string;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface CommentsSectionProps {
@@ -34,19 +34,9 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ postId, onCommentAdde
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: commentsData, error } = await supabase
         .from('post_comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          profiles!post_comments_user_id_fkey (
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('id, content, created_at, user_id')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
@@ -55,7 +45,27 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ postId, onCommentAdde
         return;
       }
 
-      setComments(data || []);
+      // Fetch profile data for each comment
+      const commentsWithProfiles = await Promise.all(
+        (commentsData || []).map(async (comment) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('username, full_name, avatar_url')
+            .eq('id', comment.user_id)
+            .single();
+
+          return {
+            ...comment,
+            profiles: profileData || {
+              username: 'Usuário',
+              full_name: 'Usuário',
+              avatar_url: null
+            }
+          };
+        })
+      );
+
+      setComments(commentsWithProfiles);
     } catch (err) {
       console.error('Unexpected error fetching comments:', err);
     } finally {
@@ -146,7 +156,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ postId, onCommentAdde
                 <div className="bg-muted p-3 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-sm">
-                      {comment.profiles?.full_name || comment.profiles?.username}
+                      {comment.profiles?.full_name || comment.profiles?.username || 'Usuário'}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(comment.created_at), {
