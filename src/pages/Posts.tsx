@@ -11,6 +11,7 @@ interface Post {
   id: string;
   content: string;
   video_url: string | null;
+  image_url?: string | null;
   created_at: string;
   user_id: string;
   profiles: {
@@ -34,9 +35,10 @@ const Posts = () => {
           id,
           content,
           video_url,
+          image_url,
           created_at,
           user_id,
-          profiles!posts_user_id_fkey (
+          profiles (
             username,
             full_name,
             avatar_url
