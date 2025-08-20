@@ -25,6 +25,11 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Limpar preview anterior
+      if (mediaPreview) {
+        URL.revokeObjectURL(mediaPreview);
+      }
+      
       if (file.type.startsWith('video/')) {
         setMediaFile(file);
         setMediaType('video');
@@ -37,6 +42,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
         setMediaPreview(url);
       } else {
         toast.error('Por favor, selecione apenas arquivos de vídeo ou imagem');
+        // Limpar input
+        e.target.value = '';
       }
     }
   };
@@ -48,82 +55,132 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
       URL.revokeObjectURL(mediaPreview);
       setMediaPreview(null);
     }
+    // Limpar input file
+    const fileInput = document.getElementById('media-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   const uploadMedia = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-    const bucketName = file.type.startsWith('video/') ? 'post-videos' : 'post-images';
-
-    const { error: uploadError } = await supabase.storage
-      .from(bucketName)
-      .upload(fileName, file);
-
-    if (uploadError) {
-      console.error('Error uploading media:', uploadError);
+    if (!user?.id) {
+      console.error('User ID não encontrado');
       return null;
     }
 
-    const { data } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(fileName);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const bucketName = file.type.startsWith('video/') ? 'post-videos' : 'post-images';
 
-    return data.publicUrl;
+      console.log('Fazendo upload para bucket:', bucketName, 'arquivo:', fileName);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload realizado com sucesso:', uploadData);
+
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+
+      console.log('URL pública gerada:', urlData.publicUrl);
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Erro durante upload de mídia:', error);
+      return null;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || (!content.trim() && !mediaFile)) {
+    if (!user?.id) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
+
+    const trimmedContent = content.trim();
+    if (!trimmedContent && !mediaFile) {
       toast.error('Adicione um texto, vídeo ou imagem para criar o post');
       return;
     }
 
     setUploading(true);
+    console.log('Iniciando criação de post...');
 
     try {
       let mediaUrl = null;
       
       if (mediaFile) {
+        console.log('Fazendo upload de mídia...');
         mediaUrl = await uploadMedia(mediaFile);
         if (!mediaUrl) {
           toast.error('Erro ao fazer upload da mídia');
-          setUploading(false);
           return;
         }
+        console.log('Upload de mídia concluído:', mediaUrl);
       }
 
       const postData: any = {
         user_id: user.id,
-        content: content.trim() || null,
+        content: trimmedContent || null,
       };
 
-      if (mediaType === 'video') {
+      if (mediaType === 'video' && mediaUrl) {
         postData.video_url = mediaUrl;
-      } else if (mediaType === 'image') {
+      } else if (mediaType === 'image' && mediaUrl) {
         postData.image_url = mediaUrl;
       }
 
-      const { error } = await supabase
-        .from('posts')
-        .insert([postData]);
+      console.log('Dados do post a serem inseridos:', postData);
 
-      if (error) {
-        console.error('Error creating post:', error);
-        toast.error('Erro ao criar post');
-      } else {
-        toast.success('Post criado com sucesso!');
-        onPostCreated();
+      const { data: insertData, error: insertError } = await supabase
+        .from('posts')
+        .insert([postData])
+        .select();
+
+      if (insertError) {
+        console.error('Erro ao inserir post:', insertError);
+        toast.error(`Erro ao criar post: ${insertError.message}`);
+        return;
       }
+
+      console.log('Post criado com sucesso:', insertData);
+      toast.success('Post criado com sucesso!');
+      
+      // Resetar formulário
+      setContent('');
+      removeMedia();
+      
+      // Chamar callback
+      onPostCreated();
+      
     } catch (err) {
-      console.error('Unexpected error creating post:', err);
+      console.error('Erro inesperado ao criar post:', err);
       toast.error('Erro inesperado ao criar post');
     } finally {
       setUploading(false);
     }
   };
+
+  // Cleanup na desmontagem do componente
+  React.useEffect(() => {
+    return () => {
+      if (mediaPreview) {
+        URL.revokeObjectURL(mediaPreview);
+      }
+    };
+  }, [mediaPreview]);
 
   return (
     <Card className="mb-8">
@@ -142,6 +199,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
               onChange={(e) => setContent(e.target.value)}
               rows={4}
               className="resize-none"
+              disabled={uploading}
             />
           </div>
 
@@ -156,11 +214,13 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
                 accept="video/*,image/*"
                 onChange={handleMediaChange}
                 className="hidden"
+                disabled={uploading}
               />
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => document.getElementById('media-upload')?.click()}
+                disabled={uploading}
               >
                 <Video className="h-4 w-4 mr-2" />
                 Selecionar Mídia
@@ -194,6 +254,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
                 size="sm"
                 onClick={removeMedia}
                 className="absolute top-2 right-2"
+                disabled={uploading}
               >
                 <X className="h-4 w-4" />
               </Button>
