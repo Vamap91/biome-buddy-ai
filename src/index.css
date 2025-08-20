@@ -31,6 +31,20 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    
+    /* Gradientes personalizados */
+    --gradient-hero: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+    --gradient-card: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    --gradient-nature: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    
+    /* Sombras personalizadas */
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-medium: 0 4px 16px rgba(34, 197, 94, 0.15);
+    --shadow-strong: 0 8px 32px rgba(0, 0, 0, 0.12);
+    
+    /* Cores da natureza */
+    --nature-light: 142 76% 73%;
+    --nature-medium: 142 71% 45%;
   }
 
   .dark {
@@ -58,6 +72,11 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    
+    /* Gradientes para modo escuro */
+    --gradient-hero: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #14532d 100%);
+    --gradient-card: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    --gradient-nature: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   }
 }
 
