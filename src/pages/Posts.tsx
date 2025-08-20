@@ -19,6 +19,9 @@ interface Post {
     full_name: string;
     avatar_url: string | null;
   };
+  likes_count: number;
+  user_has_liked: boolean;
+  comments_count: number;
 }
 
 const Posts = () => {
@@ -48,10 +51,47 @@ const Posts = () => {
 
       if (error) {
         console.error('Error fetching posts:', error);
-      } else {
-        console.log('Posts fetched successfully:', data);
-        setPosts(data || []);
+        return;
       }
+
+      // Fetch likes and comments count for each post
+      const postsWithStats = await Promise.all(
+        (data || []).map(async (post) => {
+          // Get likes count
+          const { count: likesCount } = await supabase
+            .from('post_likes')
+            .select('*', { count: 'exact' })
+            .eq('post_id', post.id);
+
+          // Check if current user liked this post
+          let userHasLiked = false;
+          if (user) {
+            const { data: userLike } = await supabase
+              .from('post_likes')
+              .select('id')
+              .eq('post_id', post.id)
+              .eq('user_id', user.id)
+              .single();
+            userHasLiked = !!userLike;
+          }
+
+          // Get comments count
+          const { count: commentsCount } = await supabase
+            .from('post_comments')
+            .select('*', { count: 'exact' })
+            .eq('post_id', post.id);
+
+          return {
+            ...post,
+            likes_count: likesCount || 0,
+            user_has_liked: userHasLiked,
+            comments_count: commentsCount || 0,
+          };
+        })
+      );
+
+      console.log('Posts fetched successfully:', postsWithStats.length);
+      setPosts(postsWithStats);
     } catch (err) {
       console.error('Unexpected error fetching posts:', err);
     } finally {
@@ -66,6 +106,10 @@ const Posts = () => {
   const handlePostCreated = () => {
     setShowCreateForm(false);
     fetchPosts();
+  };
+
+  const handleLikeUpdate = () => {
+    fetchPosts(); // Refresh posts to update like counts
   };
 
   if (!user) {
@@ -100,7 +144,7 @@ const Posts = () => {
           />
         )}
 
-        <PostsFeed posts={posts} loading={loading} />
+        <PostsFeed posts={posts} loading={loading} onLikeUpdate={handleLikeUpdate} />
       </div>
     </div>
   );

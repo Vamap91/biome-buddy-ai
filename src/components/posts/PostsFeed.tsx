@@ -9,6 +9,7 @@ import { Heart, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import CommentsSection from './CommentsSection';
 
 interface Post {
   id: string;
@@ -22,30 +23,54 @@ interface Post {
     full_name: string;
     avatar_url: string | null;
   };
-  likes_count?: number;
-  user_has_liked?: boolean;
+  likes_count: number;
+  user_has_liked: boolean;
+  comments_count: number;
 }
 
 interface PostsFeedProps {
   posts: Post[];
   loading: boolean;
+  onLikeUpdate: () => void;
 }
 
-const PostsFeed: React.FC<PostsFeedProps> = ({ posts, loading }) => {
+const PostsFeed: React.FC<PostsFeedProps> = ({ posts, loading, onLikeUpdate }) => {
   const { user } = useAuth();
   const [likingPosts, setLikingPosts] = useState<Set<string>>(new Set());
+  const [showComments, setShowComments] = useState<Set<string>>(new Set());
 
-  const handleLike = async (postId: string) => {
+  const handleLike = async (postId: string, currentlyLiked: boolean) => {
     if (!user || likingPosts.has(postId)) return;
 
     setLikingPosts(prev => new Set(prev).add(postId));
 
     try {
-      // For now, we'll just show a toast. The actual like functionality would require
-      // additional database tables for likes that we haven't created yet.
-      toast.success('Like adicionado!');
+      if (currentlyLiked) {
+        // Unlike the post
+        const { error } = await supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        toast.success('Like removido!');
+      } else {
+        // Like the post
+        const { error } = await supabase
+          .from('post_likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+          });
+
+        if (error) throw error;
+        toast.success('Post curtido!');
+      }
+
+      onLikeUpdate(); // Refresh the posts data
     } catch (error) {
-      console.error('Error liking post:', error);
+      console.error('Error handling like:', error);
       toast.error('Erro ao curtir post');
     } finally {
       setLikingPosts(prev => {
@@ -54,6 +79,18 @@ const PostsFeed: React.FC<PostsFeedProps> = ({ posts, loading }) => {
         return newSet;
       });
     }
+  };
+
+  const toggleComments = (postId: string) => {
+    setShowComments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) {
+        newSet.delete(postId);
+      } else {
+        newSet.add(postId);
+      }
+      return newSet;
+    });
   };
 
   if (loading) {
@@ -140,22 +177,36 @@ const PostsFeed: React.FC<PostsFeedProps> = ({ posts, loading }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleLike(post.id)}
+                onClick={() => handleLike(post.id, post.user_has_liked)}
                 disabled={likingPosts.has(post.id)}
-                className="text-muted-foreground hover:text-red-500"
+                className={`text-muted-foreground hover:text-red-500 ${
+                  post.user_has_liked ? 'text-red-500' : ''
+                }`}
               >
-                <Heart className="h-4 w-4 mr-1" />
-                Curtir
+                <Heart 
+                  className={`h-4 w-4 mr-1 ${
+                    post.user_has_liked ? 'fill-current' : ''
+                  }`} 
+                />
+                {post.likes_count} {post.likes_count === 1 ? 'Curtida' : 'Curtidas'}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => toggleComments(post.id)}
                 className="text-muted-foreground hover:text-blue-500"
               >
                 <MessageCircle className="h-4 w-4 mr-1" />
-                Comentar
+                {post.comments_count} {post.comments_count === 1 ? 'Comentário' : 'Comentários'}
               </Button>
             </div>
+
+            {showComments.has(post.id) && (
+              <CommentsSection 
+                postId={post.id} 
+                onCommentAdded={onLikeUpdate}
+              />
+            )}
           </CardContent>
         </Card>
       ))}
