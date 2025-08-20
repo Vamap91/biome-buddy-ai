@@ -1,0 +1,5 @@
+
+-- Add foreign key constraint between posts.user_id and profiles.id
+ALTER TABLE public.posts 
+ADD CONSTRAINT posts_user_id_fkey 
+FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
