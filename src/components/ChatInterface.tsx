@@ -7,15 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
   Send, 
-  Paperclip, 
-  Mic, 
   MoreVertical, 
   Star,
   Share2,
   Bot,
   User,
-  Loader2,
-  File
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -42,15 +39,12 @@ const ChatInterface = ({
   className = "" 
 }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useLanguage();
 
   const handleSendMessage = () => {
-    if ((inputValue.trim() || attachedFiles.length > 0) && onSendMessage && !isProcessing) {
-      onSendMessage(inputValue || "Analise o anexo enviado", attachedFiles);
+    if (inputValue.trim() && onSendMessage && !isProcessing) {
+      onSendMessage(inputValue);
       setInputValue("");
-      setAttachedFiles([]);
     }
   };
 
@@ -59,21 +53,6 @@ const ChatInterface = ({
       e.preventDefault();
       handleSendMessage();
     }
-  };
-
-  const handleFileAttach = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setAttachedFiles(prev => [...prev, ...files]);
-    // Reset the input to allow selecting the same file again
-    e.target.value = '';
-  };
-
-  const removeFile = (index: number) => {
-    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -183,44 +162,7 @@ const ChatInterface = ({
 
         {/* Área de input */}
         <div className="border-t border-border/40 p-4">
-          {/* Arquivos anexados */}
-          {attachedFiles.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {attachedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 bg-muted px-3 py-1 rounded-lg text-sm">
-                  <File className="h-3 w-3" />
-                  <span className="truncate max-w-32">{file.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => removeFile(index)}
-                  >
-                    ×
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center space-x-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.xls,.xlsx,.ppt,.pptx"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-muted-foreground"
-              onClick={handleFileAttach}
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            
+          <div className="flex items-center space-x-2">            
             <div className="flex-1 relative">
               <Input
                 placeholder={t('chatPlaceholder')}
@@ -228,20 +170,13 @@ const ChatInterface = ({
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 disabled={isProcessing}
-                className="pr-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+                className="bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
               />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
-              >
-                <Mic className="h-4 w-4" />
-              </Button>
             </div>
 
             <Button 
               onClick={handleSendMessage}
-              disabled={(!inputValue.trim() && attachedFiles.length === 0) || isProcessing}
+              disabled={!inputValue.trim() || isProcessing}
               className="bg-hero-gradient hover:opacity-90 text-white"
             >
               {isProcessing ? (
