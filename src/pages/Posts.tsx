@@ -35,7 +35,7 @@ const Posts = () => {
           video_url,
           created_at,
           user_id,
-          profiles:user_id (
+          profiles (
             username,
             full_name,
             avatar_url
