@@ -15,17 +15,11 @@ export function useSecurityLogger() {
     try {
       setIsLogging(true);
       
-      // Log failed login attempt - this will use the service role policy
-      // or admin policy if the user is an admin
-      const { error } = await supabase
-        .from('failed_login_attempts')
-        .insert([
-          {
-            email,
-            ip_address: null, // IP will be captured server-side
-            user_agent: userAgent || navigator.userAgent,
-          }
-        ]);
+      // Use the secure database function to log failed attempts
+      const { error } = await supabase.rpc('log_failed_login_attempt', {
+        p_email: email,
+        p_user_agent: userAgent || navigator.userAgent,
+      });
 
       if (error) {
         console.error('Error logging failed login attempt:', error);
