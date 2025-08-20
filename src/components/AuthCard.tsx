@@ -40,7 +40,7 @@ const AuthCard = ({ title, description, children, className = "" }: AuthCardProp
 
         {/* Footer */}
         <div className="text-center mt-6 text-gray-500 text-sm">
-          <p>© 2024 Dr_C. Feito com 💚 para a biodiversidade.</p>
+          <p>© 2025 Charles Frewen. Todos os direitos reservados.</p>
         </div>
       </div>
     </div>

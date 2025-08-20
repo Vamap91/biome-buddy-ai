@@ -345,10 +345,8 @@ const Index = () => {
               </div>
               <span className="text-2xl font-bold">Dr_C</span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-400">
-              <span>© 2024 Dr_C. Feito com</span>
-              <Heart className="h-4 w-4 text-red-400 fill-current" />
-              <span>para a biodiversidade.</span>
+            <div className="text-gray-400">
+              <span>© 2025 Charles Frewen. Todos os direitos reservados.</span>
             </div>
           </div>
         </div>
