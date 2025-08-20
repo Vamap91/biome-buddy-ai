@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, BookOpen, Settings, LogIn, Users, Video, Leaf, Star, TrendingUp, Globe, Heart, PlayCircle } from "lucide-react";
+import { MessageSquare, BookOpen, Settings, LogIn, Users, Video, Globe, Star, TrendingUp, Heart, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -16,7 +16,7 @@ const Index = () => {
           <div className="text-center mb-16">
             <div className="inline-flex items-center space-x-3 mb-8">
               <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl flex items-center justify-center shadow-xl">
-                <Leaf className="h-10 w-10 text-white" />
+                <Globe className="h-10 w-10 text-white" />
               </div>
               <span className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-green-700 to-emerald-700 bg-clip-text text-transparent">Dr_C</span>
             </div>
@@ -341,7 +341,7 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
               <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl flex items-center justify-center">
-                <Leaf className="h-6 w-6 text-white" />
+                <Globe className="h-6 w-6 text-white" />
               </div>
               <span className="text-2xl font-bold">Dr_C</span>
             </div>

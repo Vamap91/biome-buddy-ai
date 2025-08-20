@@ -1,7 +1,7 @@
 
 import { ReactNode } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaf } from "lucide-react";
+import { Globe } from "lucide-react";
 
 interface AuthCardProps {
   title: string;
@@ -18,7 +18,7 @@ const AuthCard = ({ title, description, children, className = "" }: AuthCardProp
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-3 mb-4">
             <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Leaf className="h-6 w-6 text-white" />
+              <Globe className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-gray-900">Dr_C</span>
           </div>

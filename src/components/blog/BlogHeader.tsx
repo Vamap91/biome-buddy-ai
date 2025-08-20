@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Leaf, LayoutDashboard, Gamepad2, Settings, BookOpen, PlusCircle } from 'lucide-react';
+import { Globe, LayoutDashboard, Gamepad2, Settings, BookOpen, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface BlogHeaderProps {
@@ -18,7 +18,7 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({ currentView, setCurrentView }) 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center">
-              <Leaf className="h-6 w-6 text-white" />
+              <Globe className="h-6 w-6 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Blog Dr_C v2.0</h1>
