@@ -15,7 +15,6 @@ import Chat from "./pages/Chat";
 import FreeChat from "./pages/FreeChat";
 import Settings from "./pages/Settings";
 import Blog from "./pages/Blog";
-import Posts from "./pages/Posts";
 import Games from "./pages/Games";
 import NotFound from "./pages/NotFound";
 
@@ -63,14 +62,6 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <Blog />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/posts"
-                  element={
-                    <ProtectedRoute>
-                      <Posts />
                     </ProtectedRoute>
                   }
                 />
