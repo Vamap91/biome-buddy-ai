@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Video, Image, X, Upload } from 'lucide-react';
+import { Video, Image, X, Upload, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CreatePostFormProps {
@@ -42,7 +42,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
         setMediaPreview(url);
       } else {
         toast.error('Por favor, selecione apenas arquivos de vídeo ou imagem');
-        // Limpar input
         e.target.value = '';
       }
     }
@@ -55,7 +54,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
       URL.revokeObjectURL(mediaPreview);
       setMediaPreview(null);
     }
-    // Limpar input file
     const fileInput = document.getElementById('media-upload') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
@@ -65,6 +63,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
   const uploadMedia = async (file: File): Promise<string | null> => {
     if (!user?.id) {
       console.error('User ID não encontrado');
+      toast.error('Usuário não autenticado');
       return null;
     }
 
@@ -84,6 +83,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
 
       if (uploadError) {
         console.error('Erro no upload:', uploadError);
+        toast.error(`Erro no upload: ${uploadError.message}`);
         throw uploadError;
       }
 
@@ -97,6 +97,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
       return urlData.publicUrl;
     } catch (error) {
       console.error('Erro durante upload de mídia:', error);
+      toast.error('Falha no upload da mídia');
       return null;
     }
   };
@@ -125,7 +126,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
         console.log('Fazendo upload de mídia...');
         mediaUrl = await uploadMedia(mediaFile);
         if (!mediaUrl) {
-          toast.error('Erro ao fazer upload da mídia');
           return;
         }
         console.log('Upload de mídia concluído:', mediaUrl);
@@ -226,7 +226,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, onCancel
                 Selecionar Mídia
               </Button>
               {mediaFile && (
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground flex items-center">
+                  <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
                   {mediaFile.name}
                 </span>
               )}
