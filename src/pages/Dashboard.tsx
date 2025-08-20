@@ -1,20 +1,19 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import MetricCard from '@/components/MetricCard';
 import { 
   MessageSquare, 
   BarChart3, 
-  Zap, 
   Settings,
   MessageCircle,
-  TrendingUp,
   Calendar,
   Gamepad2,
-  BookOpen
+  BookOpen,
+  PlusCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -80,7 +79,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* Action Button - Chat IA */}
         <Card className="mb-8 bg-hero-gradient border-0">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -101,40 +100,83 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <MetricCard
-            title={t('conversationsToday')}
-            value={stats.conversationsToday.toString()}
-            icon={<MessageSquare className="h-4 w-4" />}
-            trend={{
-              value: 12,
-              label: "from yesterday"
-            }}
-          />
-          <MetricCard
-            title={t('queriesPerformed')}
-            value={stats.totalMessages.toString()}
-            icon={<TrendingUp className="h-4 w-4" />}
-            trend={{
-              value: 8,
-              label: "from last week"
-            }}
-          />
-          <MetricCard
-            title={t('tokensUsed')}
-            value={stats.estimatedTokens.toLocaleString()}
-            icon={<Zap className="h-4 w-4" />}
-            trend={{
-              value: 23,
-              label: "from last month"
-            }}
-          />
+        {/* Quick Access Buttons Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Posts Button */}
+          <Card className="bg-green-600 border-0 hover:bg-green-700 transition-colors cursor-pointer" onClick={() => navigate('/posts')}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="text-white">
+                  <h2 className="text-xl font-semibold mb-2">Posts</h2>
+                  <p className="text-white/80">Crie e compartilhe conteúdo</p>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="lg"
+                  className="bg-white text-green-600 hover:bg-white/90"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/posts');
+                  }}
+                >
+                  <PlusCircle className="h-5 w-5 mr-2" />
+                  Posts
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Blog Button */}
+          <Card className="bg-green-600 border-0 hover:bg-green-700 transition-colors cursor-pointer" onClick={() => navigate('/blog')}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="text-white">
+                  <h2 className="text-xl font-semibold mb-2">Blog</h2>
+                  <p className="text-white/80">Explore artigos sobre biodiversidade</p>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="lg"
+                  className="bg-white text-green-600 hover:bg-white/90"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/blog');
+                  }}
+                >
+                  <BookOpen className="h-5 w-5 mr-2" />
+                  Blog
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Games Button */}
+          <Card className="bg-green-600 border-0 hover:bg-green-700 transition-colors cursor-pointer" onClick={() => navigate('/games')}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="text-white">
+                  <h2 className="text-xl font-semibold mb-2">Jogos</h2>
+                  <p className="text-white/80">Aprenda jogando sobre biodiversidade</p>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="lg"
+                  className="bg-white text-green-600 hover:bg-white/90"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/games');
+                  }}
+                >
+                  <Gamepad2 className="h-5 w-5 mr-2" />
+                  Jogos
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Recent Activity & Quick Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activity */}
+        {/* Recent Activity */}
+        <div className="grid grid-cols-1 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -163,41 +205,6 @@ const Dashboard = () => {
                     <p className="text-sm">Inicie uma conversa para ver suas atividades aqui</p>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5" />
-                <span>{t('quickStats')}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Status</span>
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                    {t('online')}
-                  </span>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Conversas hoje</span>
-                    <span className="font-medium">{stats.conversationsToday}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total de mensagens</span>
-                    <span className="font-medium">{stats.totalMessages}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tokens estimados</span>
-                    <span className="font-medium">{stats.estimatedTokens.toLocaleString()}</span>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
