@@ -38,7 +38,7 @@ const Posts = () => {
           image_url,
           created_at,
           user_id,
-          profiles (
+          profiles!fk_posts_profiles (
             username,
             full_name,
             avatar_url
@@ -49,6 +49,7 @@ const Posts = () => {
       if (error) {
         console.error('Error fetching posts:', error);
       } else {
+        console.log('Posts fetched successfully:', data);
         setPosts(data || []);
       }
     } catch (err) {
