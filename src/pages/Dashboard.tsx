@@ -101,7 +101,7 @@ const Dashboard = () => {
         {/* Quick Access Buttons Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Blog Button */}
-          <Card className="bg-green-600 border-0 hover:bg-green-700 transition-colors cursor-pointer" onClick={() => navigate('/blog')}>
+          <Card className="bg-hero-gradient border-0 hover:opacity-90 transition-opacity cursor-pointer" onClick={() => navigate('/blog')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="text-white">
@@ -111,7 +111,7 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   size="lg"
-                  className="bg-white text-green-600 hover:bg-white/90"
+                  className="bg-white text-primary hover:bg-white/90"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/blog');
@@ -125,7 +125,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Games Button */}
-          <Card className="bg-green-600 border-0 hover:bg-green-700 transition-colors cursor-pointer" onClick={() => navigate('/games')}>
+          <Card className="bg-hero-gradient border-0 hover:opacity-90 transition-opacity cursor-pointer" onClick={() => navigate('/games')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="text-white">
@@ -135,7 +135,7 @@ const Dashboard = () => {
                 <Button 
                   variant="secondary" 
                   size="lg"
-                  className="bg-white text-green-600 hover:bg-white/90"
+                  className="bg-white text-primary hover:bg-white/90"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/games');
