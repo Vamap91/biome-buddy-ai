@@ -6,13 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
   Send, 
   MoreVertical, 
   Star,
   Share2,
   Bot,
   User,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -28,6 +35,7 @@ interface Message {
 interface ChatInterfaceProps {
   messages?: Message[];
   onSendMessage?: (message: string, attachments?: File[]) => void;
+  onDeleteConversation?: () => void;
   isProcessing?: boolean;
   className?: string;
 }
@@ -35,6 +43,7 @@ interface ChatInterfaceProps {
 const ChatInterface = ({ 
   messages = [], 
   onSendMessage,
+  onDeleteConversation,
   isProcessing = false,
   className = "" 
 }: ChatInterfaceProps) => {
@@ -55,6 +64,12 @@ const ChatInterface = ({
     }
   };
 
+  const handleDeleteConversation = () => {
+    if (onDeleteConversation) {
+      onDeleteConversation();
+    }
+  };
+
   return (
     <Card className={cn("flex flex-col h-[600px] bg-card-gradient border-0 shadow-nature", className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border/40">
@@ -72,9 +87,23 @@ const ChatInterface = ({
             </div>
           </div>
         </div>
-        <Button variant="ghost" size="sm">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem 
+              onClick={handleDeleteConversation}
+              className="text-red-600 focus:text-red-600 cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Deletar Conversa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0">

@@ -69,6 +69,12 @@ const ChatWithSidebar = () => {
     await sendMessage(content, currentConversation || undefined);
   };
 
+  const handleDeleteCurrentConversation = async () => {
+    if (currentConversation) {
+      await deleteConversation(currentConversation);
+    }
+  };
+
   return (
     <div className="flex h-full">
       <ConversationSidebar
@@ -83,6 +89,7 @@ const ChatWithSidebar = () => {
         <ChatInterface
           messages={formattedMessages}
           onSendMessage={handleSendMessage}
+          onDeleteConversation={handleDeleteCurrentConversation}
           isProcessing={isProcessing}
           className="h-full rounded-none"
         />
