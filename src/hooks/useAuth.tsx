@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthError } from '@supabase/supabase-js';
@@ -6,8 +5,8 @@ import { User, AuthError } from '@supabase/supabase-js';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, captchaToken?: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
 }
@@ -70,27 +69,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, captchaToken?: string) => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    
+    const authOptions: any = {
       email,
       password,
-    });
+    };
+
+    // Adiciona o token do captcha se fornecido
+    if (captchaToken) {
+      authOptions.options = {
+        captchaToken,
+      };
+    }
+
+    const { error } = await supabase.auth.signInWithPassword(authOptions);
     
     if (error) {
       setLoading(false);
     }
-    // Don't set loading to false on success, let the auth state change handle it
     
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, captchaToken?: string) => {
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    
+    const authOptions: any = {
       email,
       password,
-    });
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    };
+
+    // Adiciona o token do captcha se fornecido
+    if (captchaToken) {
+      authOptions.options.captchaToken = captchaToken;
+    }
+
+    const { error } = await supabase.auth.signUp(authOptions);
     setLoading(false);
     return { error };
   };

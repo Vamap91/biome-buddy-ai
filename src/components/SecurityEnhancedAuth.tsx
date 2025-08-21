@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Shield, AlertTriangle, UserPlus, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
+import CaptchaWidget from './CaptchaWidget';
 
 interface SecurityEnhancedAuthProps {
   onSuccess?: () => void;
@@ -22,6 +23,7 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
   const [isLocked, setIsLocked] = useState(false);
   const [lockEndTime, setLockEndTime] = useState<Date | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,6 +32,20 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
 
   const validatePassword = (password: string) => {
     return password.length >= 6;
+  };
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+
+  const handleCaptchaError = () => {
+    setCaptchaToken(null);
+    toast.error('Erro na verificação de captcha. Tente novamente.');
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+    toast.warning('Captcha expirado. Por favor, complete novamente.');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,10 +82,16 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
       return;
     }
 
+    // Verify captcha is completed
+    if (!captchaToken) {
+      toast.error('Por favor, complete a verificação de captcha.');
+      return;
+    }
+
     try {
       if (isSignUp) {
-        // Handle sign up
-        const { error } = await signUp(email, password);
+        // Handle sign up with captcha
+        const { error } = await signUp(email, password, captchaToken);
         
         if (error) {
           if (error.message.includes('already registered')) {
@@ -77,15 +99,18 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
           } else {
             toast.error(`Erro no cadastro: ${error.message}`);
           }
+          // Reset captcha on error
+          setCaptchaToken(null);
         } else {
           toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
-          setIsSignUp(false); // Switch back to login after successful signup
+          setIsSignUp(false);
           setPassword('');
           setConfirmPassword('');
+          setCaptchaToken(null);
         }
       } else {
-        // Handle sign in
-        const { error } = await signIn(email, password);
+        // Handle sign in with captcha
+        const { error } = await signIn(email, password, captchaToken);
 
         if (error) {
           const newFailedAttempts = failedAttempts + 1;
@@ -101,6 +126,8 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
           } else {
             toast.error(`Login falhou. ${5 - newFailedAttempts} tentativas restantes.`);
           }
+          // Reset captcha on error
+          setCaptchaToken(null);
         } else {
           // Reset failed attempts on successful login
           setFailedAttempts(0);
@@ -113,6 +140,8 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
     } catch (err) {
       console.error('Unexpected auth error:', err);
       toast.error('Erro inesperado. Tente novamente.');
+      // Reset captcha on error
+      setCaptchaToken(null);
     }
   };
 
@@ -216,10 +245,23 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
             </div>
           )}
 
+          {/* Captcha Widget */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Verificação de Segurança
+            </label>
+            <CaptchaWidget
+              onVerify={handleCaptchaVerify}
+              onError={handleCaptchaError}
+              onExpire={handleCaptchaExpire}
+              className="mb-4"
+            />
+          </div>
+
           <Button
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700"
-            disabled={loading || (!isSignUp && isLocked)}
+            disabled={loading || (!isSignUp && isLocked) || !captchaToken}
           >
             {loading ? (
               'Processando...'
@@ -241,7 +283,6 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
           </Button>
         </form>
 
-        {/* Toggle between Sign In and Sign Up */}
         <div className="mt-4 text-center">
           <button
             type="button"
@@ -252,6 +293,7 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
               setFailedAttempts(0);
               setIsLocked(false);
               setLockEndTime(null);
+              setCaptchaToken(null);
             }}
             className="text-green-600 hover:text-green-700 text-sm font-medium"
             disabled={loading}
@@ -269,6 +311,7 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
             <li>• Política de senhas seguras</li>
             <li>• Detecção de tentativas suspeitas</li>
             <li>• Bloqueio automático após falhas</li>
+            <li>• Verificação anti-bot (Captcha)</li>
             <li>• Criptografia de dados</li>
           </ul>
         </div>
