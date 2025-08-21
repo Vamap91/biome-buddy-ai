@@ -7,26 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Save, X } from 'lucide-react';
 
-interface BlogPost {
-  id: number;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  authorRole: string;
-  authorAvatar: string;
-  publishDate: string;
-  category: string;
-  tags: string[];
-  readTime: string;
-  views: number;
-  likes: number;
-  comments: number;
-  featured: boolean;
-}
-
 interface CreatePostFormProps {
-  onCreatePost: (post: Omit<BlogPost, 'id' | 'author' | 'authorRole' | 'authorAvatar' | 'publishDate' | 'readTime' | 'views' | 'likes' | 'comments' | 'featured'>) => void;
+  onCreatePost: (post: {
+    title: string;
+    excerpt: string;
+    content: string;
+    category: string;
+    tags: string[];
+  }) => void;
   onCancel: () => void;
 }
 
@@ -39,6 +27,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
     tags: [] as string[],
     newTag: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({
@@ -71,16 +60,21 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
     }
   }, [addTag]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!formData.title.trim() || !formData.content.trim()) return;
     
-    onCreatePost({
-      title: formData.title,
-      excerpt: formData.excerpt,
-      content: formData.content,
-      category: formData.category,
-      tags: formData.tags
-    });
+    setIsSubmitting(true);
+    try {
+      await onCreatePost({
+        title: formData.title,
+        excerpt: formData.excerpt || formData.content.slice(0, 200) + '...',
+        content: formData.content,
+        category: formData.category,
+        tags: formData.tags
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }, [formData, onCreatePost]);
 
   return (
@@ -89,14 +83,17 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
         <CardHeader>
           <CardTitle className="flex items-center text-2xl">
             <Edit className="h-6 w-6 mr-2" />
-            Criar Novo Post
+            Compartilhar Conhecimento
           </CardTitle>
+          <p className="text-gray-600">
+            Contribua com a comunidade compartilhando suas descobertas, pesquisas e conhecimentos sobre biodiversidade.
+          </p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Título do Post</label>
+            <label className="block text-sm font-medium mb-2">Título do Post *</label>
             <Input
-              placeholder="Digite o título do seu post..."
+              placeholder="Digite um título atrativo para seu post..."
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
             />
@@ -105,7 +102,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
           <div>
             <label className="block text-sm font-medium mb-2">Resumo/Excerpt</label>
             <Textarea
-              placeholder="Escreva um resumo atrativo do seu post..."
+              placeholder="Escreva um resumo que desperte interesse (será gerado automaticamente se deixado em branco)"
               value={formData.excerpt}
               onChange={(e) => handleInputChange('excerpt', e.target.value)}
               rows={3}
@@ -113,7 +110,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">Categoria</label>
+            <label className="block text-sm font-medium mb-2">Categoria *</label>
             <select 
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
               value={formData.category}
@@ -154,9 +151,9 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">Conteúdo</label>
+            <label className="block text-sm font-medium mb-2">Conteúdo *</label>
             <Textarea
-              placeholder="Escreva o conteúdo completo do seu post..."
+              placeholder="Compartilhe seu conhecimento de forma detalhada e didática..."
               value={formData.content}
               onChange={(e) => handleInputChange('content', e.target.value)}
               rows={15}
@@ -167,10 +164,10 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
             <Button 
               onClick={handleSubmit} 
               className="bg-green-600 hover:bg-green-700"
-              disabled={!formData.title.trim() || !formData.content.trim()}
+              disabled={!formData.title.trim() || !formData.content.trim() || isSubmitting}
             >
               <Save className="h-4 w-4 mr-2" />
-              Publicar Post
+              {isSubmitting ? 'Publicando...' : 'Publicar Post'}
             </Button>
             <Button variant="outline" onClick={onCancel}>
               Cancelar

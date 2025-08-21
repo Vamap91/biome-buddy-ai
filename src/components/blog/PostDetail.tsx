@@ -9,27 +9,11 @@ import {
   Heart, 
   MessageCircle, 
   Share2, 
-  Tag 
+  Tag,
+  User
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface BlogPost {
-  id: number;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  authorRole: string;
-  authorAvatar: string;
-  publishDate: string;
-  category: string;
-  tags: string[];
-  readTime: string;
-  views: number;
-  likes: number;
-  comments: number;
-  featured: boolean;
-}
+import { BlogPost } from '@/hooks/useBlogPosts';
 
 interface PostDetailProps {
   post: BlogPost;
@@ -39,10 +23,26 @@ interface PostDetailProps {
 
 const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) => {
   const { toast } = useToast();
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content.split(' ').length;
+    return Math.ceil(words / wordsPerMinute);
+  };
 
   const handleLike = useCallback(() => {
-    const newLikesCount = isLiked ? post.likes - 1 : post.likes + 1;
+    const newLikesCount = isLiked ? (post.likes || 0) - 1 : (post.likes || 0) + 1;
     const updatedPost = { ...post, likes: newLikesCount };
     
     setIsLiked(!isLiked);
@@ -67,7 +67,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) =
     if (navigator.share) {
       navigator.share({
         title: post.title,
-        text: post.excerpt,
+        text: post.excerpt || '',
         url: window.location.href,
       });
     } else {
@@ -104,12 +104,14 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) =
             <div className="flex items-center space-x-4">
               <Avatar className="w-12 h-12">
                 <AvatarImage src={post.authorAvatar} />
-                <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                <AvatarFallback>
+                  <User className="h-6 w-6" />
+                </AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold">{post.author}</p>
                 <p className="text-gray-600 text-sm">{post.authorRole}</p>
-                <p className="text-gray-500 text-sm">{post.publishDate}</p>
+                <p className="text-gray-500 text-sm">{formatDate(post.created_at)}</p>
               </div>
             </div>
             
@@ -121,7 +123,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) =
               <div className="flex items-center space-x-3 text-sm text-gray-500">
                 <span className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
-                  {post.readTime}
+                  {calculateReadTime(post.content)} min
                 </span>
                 <span className="flex items-center">
                   <Eye className="h-4 w-4 mr-1" />
