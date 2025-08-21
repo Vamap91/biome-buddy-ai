@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BlogPost } from '@/hooks/useBlogPosts';
+import BlogComments from './BlogComments';
 
 interface PostDetailProps {
   post: BlogPost;
@@ -54,14 +54,6 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) =
       duration: 2000,
     });
   }, [isLiked, post, onUpdatePost, toast]);
-
-  const handleComment = useCallback(() => {
-    toast({
-      title: "Comentários em breve",
-      description: "A funcionalidade de comentários será implementada em breve!",
-      duration: 3000,
-    });
-  }, [toast]);
 
   const handleShare = useCallback(() => {
     if (navigator.share) {
@@ -154,7 +146,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) =
         </div>
         
         <footer className="mt-12 pt-8 border-t border-gray-200">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
               <Button 
                 variant={isLiked ? "default" : "outline"} 
@@ -165,16 +157,19 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) =
                 <Heart className={`h-4 w-4 mr-2 ${isLiked ? 'fill-current' : ''}`} />
                 {post.likes} Curtidas
               </Button>
-              <Button variant="outline" size="sm" onClick={handleComment}>
-                <MessageCircle className="h-4 w-4 mr-2" />
+              <div className="flex items-center text-sm text-gray-500">
+                <MessageCircle className="h-4 w-4 mr-1" />
                 {post.comments} Comentários
-              </Button>
+              </div>
             </div>
             <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-2" />
               Compartilhar
             </Button>
           </div>
+          
+          {/* Seção de Comentários */}
+          <BlogComments postId={post.id} />
         </footer>
       </article>
     </div>
