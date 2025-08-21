@@ -18,7 +18,29 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const navigate = useNavigate();
+
+  // Generate arrays for day, month, and year options
+  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  const months = [
+    { value: '01', label: language === 'pt' ? 'Janeiro' : 'January' },
+    { value: '02', label: language === 'pt' ? 'Fevereiro' : 'February' },
+    { value: '03', label: language === 'pt' ? 'Março' : 'March' },
+    { value: '04', label: language === 'pt' ? 'Abril' : 'April' },
+    { value: '05', label: language === 'pt' ? 'Maio' : 'May' },
+    { value: '06', label: language === 'pt' ? 'Junho' : 'June' },
+    { value: '07', label: language === 'pt' ? 'Julho' : 'July' },
+    { value: '08', label: language === 'pt' ? 'Agosto' : 'August' },
+    { value: '09', label: language === 'pt' ? 'Setembro' : 'September' },
+    { value: '10', label: language === 'pt' ? 'Outubro' : 'October' },
+    { value: '11', label: language === 'pt' ? 'Novembro' : 'November' },
+    { value: '12', label: language === 'pt' ? 'Dezembro' : 'December' }
+  ];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => (currentYear - i).toString());
 
   // Load user profile data when component mounts
   useEffect(() => {
@@ -40,6 +62,14 @@ const Settings = () => {
         if (profile) {
           setFullName(profile.full_name || '');
           setUsername(profile.username || '');
+          
+          // Parse birth_date if it exists
+          if (profile.birth_date) {
+            const birthDate = new Date(profile.birth_date);
+            setBirthDay(birthDate.getDate().toString().padStart(2, '0'));
+            setBirthMonth((birthDate.getMonth() + 1).toString().padStart(2, '0'));
+            setBirthYear(birthDate.getFullYear().toString());
+          }
         }
       } catch (error) {
         console.error('Unexpected error loading profile:', error);
@@ -58,6 +88,12 @@ const Settings = () => {
     setLoading(true);
     
     try {
+      // Prepare birth_date if all fields are filled
+      let birthDate = null;
+      if (birthDay && birthMonth && birthYear) {
+        birthDate = `${birthYear}-${birthMonth}-${birthDay}`;
+      }
+
       // Check if profile exists
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -72,6 +108,7 @@ const Settings = () => {
           .update({
             full_name: fullName,
             username: username,
+            birth_date: birthDate,
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id);
@@ -84,7 +121,8 @@ const Settings = () => {
           .insert({
             id: user.id,
             full_name: fullName,
-            username: username
+            username: username,
+            birth_date: birthDate
           });
 
         if (error) throw error;
@@ -178,6 +216,65 @@ const Settings = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
+              </div>
+
+              <div>
+                <Label>{language === 'pt' ? 'Data de Nascimento' : 'Birth Date'}</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <div>
+                    <Label htmlFor="birth-day" className="text-sm text-muted-foreground">
+                      {language === 'pt' ? 'Dia' : 'Day'}
+                    </Label>
+                    <Select value={birthDay} onValueChange={setBirthDay}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === 'pt' ? 'Dia' : 'Day'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {days.map((day) => (
+                          <SelectItem key={day} value={day}>
+                            {day}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="birth-month" className="text-sm text-muted-foreground">
+                      {language === 'pt' ? 'Mês' : 'Month'}
+                    </Label>
+                    <Select value={birthMonth} onValueChange={setBirthMonth}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === 'pt' ? 'Mês' : 'Month'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {months.map((month) => (
+                          <SelectItem key={month.value} value={month.value}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="birth-year" className="text-sm text-muted-foreground">
+                      {language === 'pt' ? 'Ano' : 'Year'}
+                    </Label>
+                    <Select value={birthYear} onValueChange={setBirthYear}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={language === 'pt' ? 'Ano' : 'Year'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {years.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
