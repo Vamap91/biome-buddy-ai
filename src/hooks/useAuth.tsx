@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthError } from '@supabase/supabase-js';
@@ -5,8 +6,8 @@ import { User, AuthError } from '@supabase/supabase-js';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string, captchaToken?: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   signInWithGoogle: () => Promise<{ error: AuthError | null }>;
 }
@@ -23,19 +24,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('Verificando sessão inicial...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (mounted) {
           if (error) {
-            console.error('Error getting session:', error);
+            console.error('Erro ao obter sessão:', error);
           } else {
             setUser(session?.user ?? null);
-            console.log('Initial session loaded:', session?.user?.email || 'No user');
+            console.log('Sessão inicial carregada:', session?.user?.email || 'Nenhum usuário');
           }
           setLoading(false);
         }
       } catch (error) {
-        console.error('Unexpected error getting session:', error);
+        console.error('Erro inesperado ao obter sessão:', error);
         if (mounted) {
           setLoading(false);
         }
@@ -49,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         if (!mounted) return;
 
-        console.log('Auth state changed:', event, session?.user?.email || 'No user');
+        console.log('Estado de autenticação mudou:', event, session?.user?.email || 'Nenhum usuário');
         
         // Only update state for meaningful changes
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
@@ -69,58 +71,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string, captchaToken?: string) => {
+  const signIn = async (email: string, password: string) => {
+    console.log('Iniciando processo de login para:', email);
     setLoading(true);
     
-    const authOptions: any = {
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    };
-
-    // Adiciona o token do captcha se fornecido
-    if (captchaToken) {
-      authOptions.options = {
-        captchaToken,
-      };
-    }
-
-    const { error } = await supabase.auth.signInWithPassword(authOptions);
+    });
     
     if (error) {
+      console.error('Erro no login:', error);
       setLoading(false);
+    } else {
+      console.log('Login realizado com sucesso');
     }
     
     return { error };
   };
 
-  const signUp = async (email: string, password: string, captchaToken?: string) => {
+  const signUp = async (email: string, password: string) => {
+    console.log('Iniciando processo de cadastro para:', email);
     setLoading(true);
     
-    const authOptions: any = {
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/dashboard`,
       },
-    };
-
-    // Adiciona o token do captcha se fornecido
-    if (captchaToken) {
-      authOptions.options.captchaToken = captchaToken;
+    });
+    
+    if (error) {
+      console.error('Erro no cadastro:', error);
+    } else {
+      console.log('Cadastro realizado com sucesso');
     }
-
-    const { error } = await supabase.auth.signUp(authOptions);
+    
     setLoading(false);
     return { error };
   };
 
   const signOut = async () => {
+    console.log('Fazendo logout...');
     setLoading(true);
     const { error } = await supabase.auth.signOut();
     
     if (!error) {
-      // Don't set loading to false here, let the auth state change handle it
+      console.log('Logout realizado com sucesso');
     } else {
+      console.error('Erro no logout:', error);
       setLoading(false);
     }
     
@@ -128,6 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
+    console.log('Iniciando login com Google...');
     setLoading(true);
     
     try {
@@ -143,15 +144,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (error) {
-        console.error('Google sign in error:', error);
+        console.error('Erro no login com Google:', error);
         setLoading(false);
         return { error };
       }
 
-      // Don't set loading to false here for OAuth, the redirect will handle it
+      console.log('Login com Google iniciado');
       return { error: null };
     } catch (err) {
-      console.error('Unexpected Google sign in error:', err);
+      console.error('Erro inesperado no login com Google:', err);
       setLoading(false);
       return { error: err as AuthError };
     }
@@ -176,7 +177,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };
