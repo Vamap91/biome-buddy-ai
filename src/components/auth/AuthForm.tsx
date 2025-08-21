@@ -73,8 +73,13 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
         
         if (error) {
           console.error('Erro no cadastro:', error);
-          if (error.message.includes('already registered')) {
+          if (error.message.includes('already registered') || error.message.includes('already been registered')) {
             toast.error('Este email já está cadastrado. Tente fazer login.');
+            setIsSignUp(false);
+          } else if (error.message.includes('Invalid login credentials')) {
+            toast.error('Credenciais inválidas. Verifique seu email e senha.');
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error('Por favor, confirme seu email antes de fazer login.');
           } else {
             toast.error(`Erro no cadastro: ${error.message}`);
           }
@@ -94,6 +99,14 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
           const newFailedAttempts = failedAttempts + 1;
           setFailedAttempts(newFailedAttempts);
 
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Email ou senha incorretos. Verifique suas credenciais.');
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error('Por favor, confirme seu email antes de fazer login.');
+          } else {
+            toast.error(`Erro no login: ${error.message}`);
+          }
+
           // Lock account after 5 failed attempts for 15 minutes
           if (newFailedAttempts >= 5) {
             setIsLocked(true);
@@ -101,8 +114,6 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
             lockTime.setMinutes(lockTime.getMinutes() + 15);
             setLockEndTime(lockTime);
             toast.error('Muitas tentativas falharam. Conta bloqueada por 15 minutos por segurança.');
-          } else {
-            toast.error(`Login falhou. ${5 - newFailedAttempts} tentativas restantes.`);
           }
         } else {
           console.log('Login realizado com sucesso');

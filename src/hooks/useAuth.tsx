@@ -53,12 +53,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         console.log('Estado de autenticação mudou:', event, session?.user?.email || 'Nenhum usuário');
         
-        // Only update state for meaningful changes
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          setUser(session?.user ?? null);
-        }
+        setUser(session?.user ?? null);
         
-        // Only set loading to false after initial session is processed
         if (event !== 'INITIAL_SESSION') {
           setLoading(false);
         }
@@ -75,56 +71,76 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('Iniciando processo de login para:', email);
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
-      console.error('Erro no login:', error);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Erro no login:', error);
+        setLoading(false);
+        return { error };
+      } else {
+        console.log('Login realizado com sucesso para:', data.user?.email);
+        return { error: null };
+      }
+    } catch (err) {
+      console.error('Erro inesperado no login:', err);
       setLoading(false);
-    } else {
-      console.log('Login realizado com sucesso');
+      return { error: err as AuthError };
     }
-    
-    return { error };
   };
 
   const signUp = async (email: string, password: string) => {
     console.log('Iniciando processo de cadastro para:', email);
     setLoading(true);
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-    
-    if (error) {
-      console.error('Erro no cadastro:', error);
-    } else {
-      console.log('Cadastro realizado com sucesso');
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      
+      if (error) {
+        console.error('Erro no cadastro:', error);
+        setLoading(false);
+        return { error };
+      } else {
+        console.log('Cadastro realizado com sucesso para:', data.user?.email);
+        setLoading(false);
+        return { error: null };
+      }
+    } catch (err) {
+      console.error('Erro inesperado no cadastro:', err);
+      setLoading(false);
+      return { error: err as AuthError };
     }
-    
-    setLoading(false);
-    return { error };
   };
 
   const signOut = async () => {
     console.log('Fazendo logout...');
     setLoading(true);
-    const { error } = await supabase.auth.signOut();
     
-    if (!error) {
-      console.log('Logout realizado com sucesso');
-    } else {
-      console.error('Erro no logout:', error);
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (!error) {
+        console.log('Logout realizado com sucesso');
+      } else {
+        console.error('Erro no logout:', error);
+        setLoading(false);
+      }
+      
+      return { error };
+    } catch (err) {
+      console.error('Erro inesperado no logout:', err);
       setLoading(false);
+      return { error: err as AuthError };
     }
-    
-    return { error };
   };
 
   const signInWithGoogle = async () => {
