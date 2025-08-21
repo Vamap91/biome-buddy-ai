@@ -15,7 +15,7 @@ const CaptchaWidget = ({ onVerify, onError, onExpire, className }: CaptchaWidget
         siteKey="0x4AAAAAAAkX4EzKkWyZ6rJZ" // Chave pública padrão para desenvolvimento
         onSuccess={onVerify}
         onError={onError}
-        onExpired={onExpire}
+        onExpire={onExpire}
         options={{
           theme: 'light',
           size: 'normal',
