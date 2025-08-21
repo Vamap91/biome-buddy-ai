@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -7,10 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Globe, LogOut, Save, Crown, Zap } from 'lucide-react';
+import { User, Globe, LogOut, Save, Crown, Zap, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import UpgradeModal from '@/components/UpgradeModal';
+import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -18,6 +18,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
+  const navigate = useNavigate();
 
   // Load user profile data when component mounts
   useEffect(() => {
@@ -116,6 +117,16 @@ const Settings = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
+          <div className="flex items-center space-x-4 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>{language === 'pt' ? 'Voltar ao Dashboard' : 'Back to Dashboard'}</span>
+            </Button>
+          </div>
           <h1 className="text-3xl font-bold text-foreground">{t('settings')}</h1>
           <p className="text-muted-foreground mt-2">
             {t('managePreferences')}
