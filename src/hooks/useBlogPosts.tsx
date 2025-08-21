@@ -36,12 +36,12 @@ export const useBlogPosts = () => {
     try {
       setLoading(true);
       
-      // Buscar posts com contadores de likes e comentários
+      // Buscar posts com dados do perfil do usuário
       const { data: postsData, error: postsError } = await supabase
         .from('blog_posts')
         .select(`
           *,
-          profiles:user_id (
+          profiles (
             username,
             full_name,
             avatar_url
@@ -49,40 +49,52 @@ export const useBlogPosts = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (postsError) throw postsError;
+      if (postsError) {
+        console.error('Erro ao buscar posts:', postsError);
+        throw postsError;
+      }
 
       // Para cada post, buscar contadores de likes e comentários
       const postsWithCounts = await Promise.all(
         (postsData || []).map(async (post) => {
           // Contar likes
-          const { count: likesCount } = await supabase
+          const { count: likesCount, error: likesError } = await supabase
             .from('blog_post_likes')
             .select('*', { count: 'exact', head: true })
             .eq('post_id', post.id);
 
+          if (likesError) console.error('Erro ao contar likes:', likesError);
+
           // Contar comentários
-          const { count: commentsCount } = await supabase
+          const { count: commentsCount, error: commentsError } = await supabase
             .from('blog_post_comments')
             .select('*', { count: 'exact', head: true })
             .eq('post_id', post.id);
 
+          if (commentsError) console.error('Erro ao contar comentários:', commentsError);
+
           // Verificar se o usuário atual curtiu
           let isLiked = false;
           if (user) {
-            const { data: likeData } = await supabase
+            const { data: likeData, error: likeError } = await supabase
               .from('blog_post_likes')
               .select('id')
               .eq('post_id', post.id)
               .eq('user_id', user.id)
-              .single();
+              .maybeSingle();
+            
+            if (likeError) console.error('Erro ao verificar like:', likeError);
             isLiked = !!likeData;
           }
 
+          // Safely access profile data
+          const profileData = post.profiles as any;
+          
           return {
             ...post,
-            author: post.profiles?.full_name || post.profiles?.username || 'Usuário Anônimo',
+            author: profileData?.full_name || profileData?.username || 'Usuário Anônimo',
             authorRole: 'Colaborador',
-            authorAvatar: post.profiles?.avatar_url || '/api/placeholder/40/40',
+            authorAvatar: profileData?.avatar_url || '/api/placeholder/40/40',
             likes: likesCount || 0,
             comments: commentsCount || 0,
             isLiked
@@ -152,7 +164,7 @@ export const useBlogPosts = () => {
         .select('id')
         .eq('post_id', postId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (existingLike) {
         // Remover like
@@ -170,11 +182,19 @@ export const useBlogPosts = () => {
           }]);
       }
 
-      // Atualizar views
-      await supabase
+      // Incrementar views do post (simples update)
+      const { data: currentPost } = await supabase
         .from('blog_posts')
-        .update({ views: supabase.rpc('increment_views', { post_id: postId }) })
-        .eq('id', postId);
+        .select('views')
+        .eq('id', postId)
+        .single();
+
+      if (currentPost) {
+        await supabase
+          .from('blog_posts')
+          .update({ views: (currentPost.views || 0) + 1 })
+          .eq('id', postId);
+      }
 
       // Recarregar posts
       await fetchPosts();
