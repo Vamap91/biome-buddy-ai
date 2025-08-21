@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,17 +35,10 @@ export const useBlogPosts = () => {
     try {
       setLoading(true);
       
-      // Buscar posts com dados do perfil do usuário
+      // Buscar posts primeiro
       const { data: postsData, error: postsError } = await supabase
         .from('blog_posts')
-        .select(`
-          *,
-          profiles (
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (postsError) {
@@ -54,9 +46,20 @@ export const useBlogPosts = () => {
         throw postsError;
       }
 
-      // Para cada post, buscar contadores de likes e comentários
-      const postsWithCounts = await Promise.all(
+      // Para cada post, buscar dados do perfil e contadores
+      const postsWithDetails = await Promise.all(
         (postsData || []).map(async (post) => {
+          // Buscar dados do perfil do usuário
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('username, full_name, avatar_url')
+            .eq('id', post.user_id)
+            .maybeSingle();
+
+          if (profileError) {
+            console.error('Erro ao buscar perfil:', profileError);
+          }
+
           // Contar likes
           const { count: likesCount, error: likesError } = await supabase
             .from('blog_post_likes')
@@ -86,9 +89,6 @@ export const useBlogPosts = () => {
             if (likeError) console.error('Erro ao verificar like:', likeError);
             isLiked = !!likeData;
           }
-
-          // Safely access profile data
-          const profileData = post.profiles as any;
           
           return {
             ...post,
@@ -102,7 +102,7 @@ export const useBlogPosts = () => {
         })
       );
 
-      setPosts(postsWithCounts);
+      setPosts(postsWithDetails);
     } catch (error) {
       console.error('Erro ao carregar posts:', error);
       toast({
