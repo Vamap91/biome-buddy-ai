@@ -13,9 +13,9 @@ const CaptchaWidget = ({ onVerify, onError, onExpire, className }: CaptchaWidget
     <div className={`flex justify-center ${className}`}>
       <Turnstile
         siteKey="0x4AAAAAAAkX4EzKkWyZ6rJZ" // Chave pública padrão para desenvolvimento
-        onVerify={onVerify}
+        onSuccess={onVerify}
         onError={onError}
-        onExpire={onExpire}
+        onExpired={onExpire}
         options={{
           theme: 'light',
           size: 'normal',
