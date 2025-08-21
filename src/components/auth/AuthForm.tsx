@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, AlertTriangle, UserPlus, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
-import CaptchaWidget from '@/components/CaptchaWidget';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -23,8 +22,6 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
   const [isLocked, setIsLocked] = useState(false);
   const [lockEndTime, setLockEndTime] = useState<Date | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [showCaptcha, setShowCaptcha] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,24 +30,6 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
 
   const validatePassword = (password: string) => {
     return password.length >= 6;
-  };
-
-  const handleCaptchaSuccess = (token: string) => {
-    console.log('Captcha verificado com sucesso');
-    setCaptchaToken(token);
-    setShowCaptcha(false);
-  };
-
-  const handleCaptchaError = () => {
-    console.error('Erro na verificação do captcha');
-    toast.error('Erro na verificação do captcha. Tente novamente.');
-    setCaptchaToken(null);
-  };
-
-  const handleCaptchaExpire = () => {
-    console.log('Captcha expirado');
-    setCaptchaToken(null);
-    setShowCaptcha(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,26 +66,15 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
       return;
     }
 
-    // Show captcha if failed attempts >= 3 or if it's not verified yet
-    if (failedAttempts >= 3 && !captchaToken) {
-      setShowCaptcha(true);
-      toast.error('Por favor, complete a verificação de segurança.');
-      return;
-    }
-
     try {
       if (isSignUp) {
         console.log('Tentando cadastrar usuário:', email);
-        const { error } = await signUp(email, password, captchaToken || undefined);
+        const { error } = await signUp(email, password);
         
         if (error) {
           console.error('Erro no cadastro:', error);
           
-          if (error.message.includes('captcha')) {
-            setShowCaptcha(true);
-            setCaptchaToken(null);
-            toast.error('Verificação de segurança necessária. Complete o captcha.');
-          } else if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+          if (error.message.includes('already registered') || error.message.includes('already been registered')) {
             toast.error('Este email já está cadastrado. Tente fazer login.');
             setIsSignUp(false);
           } else if (error.message.includes('Invalid login credentials')) {
@@ -122,22 +90,17 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
           setIsSignUp(false);
           setPassword('');
           setConfirmPassword('');
-          setCaptchaToken(null);
         }
       } else {
         console.log('Tentando fazer login:', email);
-        const { error } = await signIn(email, password, captchaToken || undefined);
+        const { error } = await signIn(email, password);
 
         if (error) {
           console.error('Erro no login:', error);
           const newFailedAttempts = failedAttempts + 1;
           setFailedAttempts(newFailedAttempts);
 
-          if (error.message.includes('captcha')) {
-            setShowCaptcha(true);
-            setCaptchaToken(null);
-            toast.error('Verificação de segurança necessária. Complete o captcha.');
-          } else if (error.message.includes('Invalid login credentials')) {
+          if (error.message.includes('Invalid login credentials')) {
             toast.error('Email ou senha incorretos. Verifique suas credenciais.');
           } else if (error.message.includes('Email not confirmed')) {
             toast.error('Por favor, confirme seu email antes de fazer login.');
@@ -159,7 +122,6 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
           setFailedAttempts(0);
           setIsLocked(false);
           setLockEndTime(null);
-          setCaptchaToken(null);
           toast.success('Login realizado com sucesso!');
           onSuccess?.();
         }
@@ -178,21 +140,10 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
           <AlertDescription className="text-yellow-800">
             {isLocked 
               ? 'Conta temporariamente bloqueada por segurança.'
-              : `${failedAttempts} tentativas falharam. Verificação de segurança necessária.`
+              : `${failedAttempts} tentativas falharam. Verificação de segurança ativa.`
             }
           </AlertDescription>
         </Alert>
-      )}
-
-      {showCaptcha && (
-        <div className="mb-4">
-          <CaptchaWidget
-            onVerify={handleCaptchaSuccess}
-            onError={handleCaptchaError}
-            onExpire={handleCaptchaExpire}
-            className="mb-4"
-          />
-        </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -257,7 +208,7 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 disabled={loading}
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -269,7 +220,7 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
         <Button
           type="submit"
           className="w-full bg-green-600 hover:bg-green-700"
-          disabled={loading || (!isSignUp && isLocked) || (showCaptcha && !captchaToken)}
+          disabled={loading || (!isSignUp && isLocked)}
         >
           {loading ? (
             'Processando...'
@@ -301,8 +252,6 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
             setFailedAttempts(0);
             setIsLocked(false);
             setLockEndTime(null);
-            setCaptchaToken(null);
-            setShowCaptcha(false);
           }}
           className="text-green-600 hover:text-green-700 text-sm font-medium"
           disabled={loading}
@@ -319,7 +268,6 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
         <ul className="mt-1 space-y-1">
           <li>• Política de senhas seguras</li>
           <li>• Detecção de tentativas suspeitas</li>
-          <li>• Verificação de segurança automática</li>
           <li>• Bloqueio automático após falhas</li>
           <li>• Criptografia de dados</li>
         </ul>

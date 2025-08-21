@@ -7,8 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string, captchaToken?: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string, captchaToken?: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
 }
 
@@ -70,24 +70,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const signIn = async (email: string, password: string, captchaToken?: string) => {
+  const signIn = async (email: string, password: string) => {
     console.log('Iniciando processo de login para:', email);
     setLoading(true);
     
     try {
-      const authOptions: any = {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      };
-
-      // Adiciona o token do captcha se fornecido
-      if (captchaToken) {
-        authOptions.options = {
-          captchaToken
-        };
-      }
-      
-      const { data, error } = await supabase.auth.signInWithPassword(authOptions);
+      });
       
       if (error) {
         console.error('Erro no login:', error);
@@ -104,25 +95,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, captchaToken?: string) => {
+  const signUp = async (email: string, password: string) => {
     console.log('Iniciando processo de cadastro para:', email);
     setLoading(true);
     
     try {
-      const authOptions: any = {
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
-      };
-
-      // Adiciona o token do captcha se fornecido
-      if (captchaToken) {
-        authOptions.options.captchaToken = captchaToken;
-      }
-      
-      const { data, error } = await supabase.auth.signUp(authOptions);
+      });
       
       if (error) {
         console.error('Erro no cadastro:', error);
