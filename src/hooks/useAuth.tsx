@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       (event, session) => {
         if (!mounted) return;
         
-        console.log('Estado de autenticação mudou:', event, session?.user?.email || 'Nenhum usuário');
+        console.log('Auth state changed:', event, session ? 'User authenticated' : 'No user');
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -41,21 +41,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Then check for existing session
     const getInitialSession = async () => {
       try {
-        console.log('Verificando sessão inicial...');
+        console.log('Checking initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (mounted) {
           if (error) {
-            console.error('Erro ao obter sessão:', error);
+            console.error('Error getting session:', error);
           } else {
             setSession(session);
             setUser(session?.user ?? null);
-            console.log('Sessão inicial carregada:', session?.user?.email || 'Nenhum usuário');
+            console.log('Initial session loaded:', session ? 'User found' : 'No user');
           }
           setLoading(false);
         }
       } catch (error) {
-        console.error('Erro inesperado ao obter sessão:', error);
+        console.error('Unexpected error getting session:', error);
         if (mounted) {
           setLoading(false);
         }
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    console.log('Iniciando processo de login para:', email);
+    console.log('Starting login process');
     setLoading(true);
     
     try {
@@ -81,22 +81,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        console.error('Erro no login:', error);
+        console.error('Login error:', error.message);
         setLoading(false);
         return { error };
       } else {
-        console.log('Login realizado com sucesso para:', data.user?.email);
+        console.log('Login successful');
         return { error: null };
       }
     } catch (err) {
-      console.error('Erro inesperado no login:', err);
+      console.error('Unexpected login error:', err);
       setLoading(false);
       return { error: err as AuthError };
     }
   };
 
   const signUp = async (email: string, password: string) => {
-    console.log('Iniciando processo de cadastro para:', email);
+    console.log('Starting signup process');
     setLoading(true);
     
     try {
@@ -109,38 +109,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        console.error('Erro no cadastro:', error);
+        console.error('Signup error:', error.message);
         setLoading(false);
         return { error };
       } else {
-        console.log('Cadastro realizado com sucesso para:', data.user?.email);
+        console.log('Signup successful');
         setLoading(false);
         return { error: null };
       }
     } catch (err) {
-      console.error('Erro inesperado no cadastro:', err);
+      console.error('Unexpected signup error:', err);
       setLoading(false);
       return { error: err as AuthError };
     }
   };
 
   const signOut = async () => {
-    console.log('Fazendo logout...');
+    console.log('Logging out...');
     setLoading(true);
     
     try {
       const { error } = await supabase.auth.signOut();
       
       if (!error) {
-        console.log('Logout realizado com sucesso');
+        console.log('Logout successful');
       } else {
-        console.error('Erro no logout:', error);
+        console.error('Logout error:', error.message);
         setLoading(false);
       }
       
       return { error };
     } catch (err) {
-      console.error('Erro inesperado no logout:', err);
+      console.error('Unexpected logout error:', err);
       setLoading(false);
       return { error: err as AuthError };
     }

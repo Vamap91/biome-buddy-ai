@@ -68,11 +68,11 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
 
     try {
       if (isSignUp) {
-        console.log('Tentando cadastrar usuário:', email);
+        console.log('Attempting user registration');
         const { error } = await signUp(email, password);
         
         if (error) {
-          console.error('Erro no cadastro:', error);
+          console.error('Registration error:', error.message);
           
           if (error.message.includes('already registered') || error.message.includes('already been registered')) {
             toast.error('Este email já está cadastrado. Tente fazer login.');
@@ -85,18 +85,18 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
             toast.error(`Erro no cadastro: ${error.message}`);
           }
         } else {
-          console.log('Cadastro realizado com sucesso');
+          console.log('Registration successful');
           toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
           setIsSignUp(false);
           setPassword('');
           setConfirmPassword('');
         }
       } else {
-        console.log('Tentando fazer login:', email);
+        console.log('Attempting login');
         const { error } = await signIn(email, password);
 
         if (error) {
-          console.error('Erro no login:', error);
+          console.error('Login error:', error.message);
           const newFailedAttempts = failedAttempts + 1;
           setFailedAttempts(newFailedAttempts);
 
@@ -117,7 +117,7 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
             toast.error('Muitas tentativas falharam. Conta bloqueada por 15 minutos por segurança.');
           }
         } else {
-          console.log('Login realizado com sucesso');
+          console.log('Login successful');
           // Reset failed attempts on successful login
           setFailedAttempts(0);
           setIsLocked(false);
@@ -127,7 +127,7 @@ const AuthForm = ({ onSuccess }: AuthFormProps) => {
         }
       }
     } catch (err) {
-      console.error('Erro inesperado na autenticação:', err);
+      console.error('Unexpected authentication error:', err);
       toast.error('Erro inesperado. Tente novamente.');
     }
   };
