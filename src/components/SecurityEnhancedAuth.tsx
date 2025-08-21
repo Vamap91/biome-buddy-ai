@@ -1,7 +1,5 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useSecurityLogger } from '@/hooks/useSecurityLogger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +13,6 @@ interface SecurityEnhancedAuthProps {
 
 const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
   const { signIn, signUp, loading } = useAuth();
-  const { logFailedLoginAttempt } = useSecurityLogger();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -91,9 +88,6 @@ const SecurityEnhancedAuth = ({ onSuccess }: SecurityEnhancedAuthProps) => {
         const { error } = await signIn(email, password);
 
         if (error) {
-          // Log failed login attempt
-          await logFailedLoginAttempt(email);
-          
           const newFailedAttempts = failedAttempts + 1;
           setFailedAttempts(newFailedAttempts);
 

@@ -1,7 +1,7 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, AuthError } from '@supabase/supabase-js';
-import { useSecurityLogger } from './useSecurityLogger';
 
 interface AuthContextType {
   user: User | null;
@@ -17,7 +17,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { logFailedLoginAttempt } = useSecurityLogger();
 
   useEffect(() => {
     let mounted = true;
@@ -79,8 +78,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
     
     if (error) {
-      // Log failed login attempt
-      await logFailedLoginAttempt(email);
       setLoading(false);
     }
     // Don't set loading to false on success, let the auth state change handle it
