@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import PlatformInfo from "@/components/PlatformInfo";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -28,6 +29,7 @@ const App: React.FC = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <PlatformInfo />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
