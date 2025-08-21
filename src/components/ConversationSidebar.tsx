@@ -76,7 +76,7 @@ const ConversationSidebar = ({
                   onClick={() => onSelectConversation(conversation.id)}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-2">
                       <h3 className="text-sm font-medium text-gray-900 truncate">
                         {conversation.title}
                       </h3>
@@ -89,7 +89,8 @@ const ConversationSidebar = ({
                         e.stopPropagation();
                         onDeleteConversation(conversation.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all duration-200 flex-shrink-0"
+                      title="Deletar conversa"
                     >
                       <Trash2 className="h-3 w-3 text-red-500" />
                     </button>
