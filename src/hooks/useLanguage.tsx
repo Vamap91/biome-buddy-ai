@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface LanguageContextType {
@@ -23,6 +24,10 @@ const translations = {
     online: 'Online',
     user: 'Usuário',
     readyToExplore: 'Pronto para explorar a biodiversidade com IA avançada?',
+    // Dashboard specific translations
+    converseWithDrC: 'Converse com o Dr_C sobre biodiversidade',
+    exploreArticles: 'Explore artigos sobre biodiversidade',
+    learnByPlaying: 'Aprenda jogando sobre biodiversidade',
     // Settings page translations
     managePreferences: 'Gerencie suas preferências e informações',
     backToDashboard: 'Voltar ao Dashboard',
@@ -166,6 +171,10 @@ const translations = {
     online: 'Online',
     user: 'User',
     readyToExplore: 'Ready to explore biodiversity with advanced AI?',
+    // Dashboard specific translations
+    converseWithDrC: 'Chat with Dr_C about biodiversity',
+    exploreArticles: 'Explore biodiversity articles',
+    learnByPlaying: 'Learn by playing about biodiversity',
     // Settings page translations
     managePreferences: 'Manage your preferences and information',
     backToDashboard: 'Back to Dashboard',
