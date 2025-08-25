@@ -63,12 +63,16 @@ const Blog: React.FC = () => {
     setSelectedPost(updatedPost);
   };
 
+  const handleSetCurrentView = (view: string) => {
+    setCurrentView(view as 'home' | 'create' | 'detail');
+  };
+
   if (currentView === 'create') {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BlogHeader currentView={currentView} setCurrentView={setCurrentView} />
+        <BlogHeader currentView={currentView} setCurrentView={handleSetCurrentView} />
         <CreatePostForm 
-          onSubmit={handleCreatePost}
+          onCreatePost={handleCreatePost}
           onCancel={() => setCurrentView('home')}
         />
       </div>
@@ -78,7 +82,7 @@ const Blog: React.FC = () => {
   if (currentView === 'detail' && selectedPost) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <BlogHeader currentView={currentView} setCurrentView={setCurrentView} />
+        <BlogHeader currentView={currentView} setCurrentView={handleSetCurrentView} />
         <PostDetail 
           post={selectedPost}
           onBack={() => setCurrentView('home')}
@@ -90,7 +94,7 @@ const Blog: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BlogHeader currentView={currentView} setCurrentView={setCurrentView} />
+      <BlogHeader currentView={currentView} setCurrentView={handleSetCurrentView} />
       
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
         {/* Search and Filters */}
@@ -153,9 +157,9 @@ const Blog: React.FC = () => {
                 <BlogPostCard
                   key={post.id}
                   post={post}
-                  featured={true}
-                  onClick={() => handlePostClick(post)}
-                  onLike={() => toggleLike(post.id)}
+                  variant="featured"
+                  onViewPost={() => handlePostClick(post)}
+                  onToggleLike={() => toggleLike(post.id)}
                 />
               ))}
             </div>
@@ -198,8 +202,8 @@ const Blog: React.FC = () => {
                 <BlogPostCard
                   key={post.id}
                   post={post}
-                  onClick={() => handlePostClick(post)}
-                  onLike={() => toggleLike(post.id)}
+                  onViewPost={() => handlePostClick(post)}
+                  onToggleLike={() => toggleLike(post.id)}
                 />
               ))}
             </div>

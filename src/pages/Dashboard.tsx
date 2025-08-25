@@ -23,13 +23,13 @@ import UpgradeModal from '@/components/UpgradeModal';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const { stats, loading } = useDashboardStats();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/');
   };
 
@@ -92,28 +92,28 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             title={t('conversationsToday')}
-            value={stats?.conversations_today || 0}
+            value={stats?.conversationsToday || 0}
             icon={MessageCircle}
             loading={loading}
             className="bg-blue-50 border-blue-200"
           />
           <MetricCard
             title={t('queriesPerformed')}
-            value={stats?.queries_performed || 0}
+            value={stats?.totalMessages || 0}
             icon={BarChart3}
             loading={loading}
             className="bg-green-50 border-green-200"
           />
           <MetricCard
             title={t('tokensUsed')}
-            value={stats?.tokens_used || 0}
+            value={stats?.estimatedTokens || 0}
             icon={Activity}
             loading={loading}
             className="bg-purple-50 border-purple-200"
           />
           <MetricCard
             title={t('recentActivity')}
-            value={stats?.recent_activity || 0}
+            value={stats?.recentActivity?.length || 0}
             icon={Clock}
             loading={loading}
             className="bg-orange-50 border-orange-200"
@@ -217,8 +217,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       <UpgradeModal 
-        isOpen={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)} 
+        trigger={<div />}
       />
     </div>
   );
