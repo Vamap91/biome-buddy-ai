@@ -51,10 +51,7 @@ export const useBlogPosts = () => {
         (postsData || []).map(async (post) => {
           // Buscar dados do perfil do usuário
           const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('username, full_name, avatar_url')
-            .eq('id', post.user_id)
-            .maybeSingle();
+            .rpc('get_public_profile_info', { profile_user_id: post.user_id });
 
           if (profileError) {
             console.error('Erro ao buscar perfil:', profileError);
@@ -90,11 +87,12 @@ export const useBlogPosts = () => {
             isLiked = !!likeData;
           }
           
+          const profile = profileData?.[0];
           return {
             ...post,
-            author: profileData?.full_name || profileData?.username || 'Usuário Anônimo',
+            author: profile?.username || 'Usuário Anônimo',
             authorRole: 'Colaborador',
-            authorAvatar: profileData?.avatar_url || '/api/placeholder/40/40',
+            authorAvatar: profile?.avatar_url || '/api/placeholder/40/40',
             likes: likesCount || 0,
             comments: commentsCount || 0,
             isLiked

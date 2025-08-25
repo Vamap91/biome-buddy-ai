@@ -42,19 +42,17 @@ export const useBlogComments = (postId: string) => {
       const commentsWithDetails = await Promise.all(
         (commentsData || []).map(async (comment) => {
           const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('username, full_name, avatar_url')
-            .eq('id', comment.user_id)
-            .maybeSingle();
+            .rpc('get_public_profile_info', { profile_user_id: comment.user_id });
 
           if (profileError) {
             console.error('Erro ao buscar perfil:', profileError);
           }
           
+          const profile = profileData?.[0];
           return {
             ...comment,
-            author: profileData?.full_name || profileData?.username || 'Usuário Anônimo',
-            authorAvatar: profileData?.avatar_url || '/api/placeholder/32/32',
+            author: profile?.username || 'Usuário Anônimo',
+            authorAvatar: profile?.avatar_url || '/api/placeholder/32/32',
           };
         })
       );
