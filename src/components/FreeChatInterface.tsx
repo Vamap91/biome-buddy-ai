@@ -47,7 +47,7 @@ const FreeChatInterface = () => {
     setQuestionsUsed(prev => prev + 1);
 
     try {
-      const { data: aiData, error } = await supabase.functions.invoke('chat-ai', {
+      const { data: aiData, error } = await supabase.functions.invoke('free-chat-ai', {
         body: { message: inputValue }
       });
 
