@@ -50,6 +50,7 @@ const GamesPage = () => {
   const [recyclePowerUps, setRecyclePowerUps] = useState([]);
   const [activePowerUp, setActivePowerUp] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [selectedTrashItem, setSelectedTrashItem] = useState(null);
 
   // Dados dos animais brasileiros
   const animalFacts = [
@@ -302,6 +303,7 @@ const GamesPage = () => {
     setRecyclePowerUps([]);
     setActivePowerUp(null);
     setDraggedItem(null);
+    setSelectedTrashItem(null);
   };
 
   const resetRecycleGame = () => {
@@ -310,7 +312,8 @@ const GamesPage = () => {
 
   const spawnTrash = () => {
     const trashTypeKeys = Object.keys(TRASH_TYPES);
-    const availableTypes = trashTypeKeys.slice(0, Math.min(2 + recycleLevel, trashTypeKeys.length));
+    // Começar apenas com 2 tipos para crianças
+    const availableTypes = trashTypeKeys.slice(0, Math.min(2, trashTypeKeys.length));
     const randomType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
     const typeData = TRASH_TYPES[randomType];
     const randomItem = typeData.items[Math.floor(Math.random() * typeData.items.length)];
@@ -319,11 +322,12 @@ const GamesPage = () => {
       id: Date.now() + Math.random(),
       type: randomType,
       ...randomItem,
-      x: Math.random() * (window.innerWidth - 100),
+      x: Math.random() * (window.innerWidth - 200), // Mais longe das bordas
       y: -60,
-      speed: 2 + recycleLevel * 0.5,
-      rotation: Math.random() * 360,
-      isDragging: false
+      speed: 1, // Muito mais devagar para crianças
+      rotation: 0, // Sem rotação para facilitar
+      isDragging: false,
+      isSelected: false
     };
     
     setFallingTrash(prev => [...prev, newTrash]);
@@ -385,18 +389,9 @@ const GamesPage = () => {
           y: item.y + (activePowerUp?.type === 'slowTime' ? item.speed * 0.5 : item.speed),
           rotation: item.rotation + 2
         })).filter(item => {
-          // Remover itens que saíram da tela
+          // Remover itens que saíram da tela (mas SEM perder vida - crianças precisam de tempo)
           if (item.y > window.innerHeight) {
-            if (!item.isDragging) {
-              setRecycleLives(current => {
-                const newLives = current - 1;
-                if (newLives <= 0) {
-                  setRecycleGameState('gameOver');
-                }
-                return newLives;
-              });
-              setRecycleCombo(0);
-            }
+            setRecycleCombo(0); // Apenas quebra o combo
             return false;
           }
           return true;
@@ -426,18 +421,19 @@ const GamesPage = () => {
     return () => clearInterval(timerInterval);
   }, [recycleGameState]);
 
-  // Spawn de lixo
+  // Spawn de lixo - REDUZIDO para crianças
   useEffect(() => {
     if (recycleGameState !== 'playing') return;
 
     const spawnInterval = setInterval(() => {
-      if (activePowerUp?.type !== 'trashStop') {
+      // Limitar quantidade de lixo na tela para crianças (máximo 2 itens)
+      if (fallingTrash.length < 2 && activePowerUp?.type !== 'trashStop') {
         spawnTrash();
       }
-    }, Math.max(1000 - (recycleLevel * 100), 400));
+    }, 3000); // Spawn a cada 3 segundos (muito mais devagar)
 
     return () => clearInterval(spawnInterval);
-  }, [recycleGameState, recycleLevel, activePowerUp]);
+  }, [recycleGameState, recycleLevel, activePowerUp, fallingTrash.length]);
 
   // Spawn de power-ups
   useEffect(() => {
@@ -551,7 +547,11 @@ const GamesPage = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                {t('recyclaHeroDescription')}
+                <strong>Como jogar:</strong><br/>
+                🗑️ Arraste cada lixo para a lixeira da cor correta<br/>
+                ♻️ Plástico = Vermelho | 📄 Papel = Azul | 🥛 Vidro = Verde<br/>
+                🥫 Metal = Cinza | 🍌 Orgânico = Marrom<br/>
+                💡 Aprenda a reciclar e salve o planeta!
               </p>
               <Button 
                 onClick={() => setSelectedGame('recycle')}
