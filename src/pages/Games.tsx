@@ -294,7 +294,7 @@ const GamesPage = () => {
     setRecycleScore(0);
     setRecycleLevel(1);
     setRecycleLives(3);
-    setRecycleTimeLeft(60);
+    setRecycleTimeLeft(300); // Aumentado para 5 minutos (300 segundos)
     setRecycleCombo(0);
     setRecycleMaxCombo(0);
     setFallingTrash([]);
@@ -793,7 +793,7 @@ const GamesPage = () => {
         
         <div className="flex items-center space-x-3">
           <Badge variant="outline" className="px-2 py-1">
-            ⏱️ {recycleTimeLeft}s
+            ⏱️ {recycleTimeLeft}
           </Badge>
           <Badge variant="outline" className="px-2 py-1">
             ❤️ {recycleLives}
@@ -833,7 +833,8 @@ const GamesPage = () => {
             draggable
             onDragStart={(e) => {
               setDraggedItem(trash.id);
-              e.dataTransfer.setData('text/plain', trash.id.toString());
+              e.dataTransfer.setData('application/json', JSON.stringify({ id: trash.id, type: trash.type }));
+              console.log('Dragging trash:', trash.id, trash.type);
             }}
             onDragEnd={() => setDraggedItem(null)}
           >
@@ -901,9 +902,14 @@ const GamesPage = () => {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
-              const trashId = e.dataTransfer.getData('text/plain');
-              if (trashId) {
-                handleTrashDrop(parseInt(trashId), type);
+              try {
+                const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                console.log('Dropping trash:', data.id, 'on bin:', type);
+                if (data && data.id) {
+                  handleTrashDrop(data.id, type);
+                }
+              } catch (error) {
+                console.error('Error parsing drop data:', error);
               }
             }}
           >
