@@ -546,18 +546,18 @@ const GamesPage = () => {
           <Card className="hover:shadow-lg transition-shadow cursor-pointer transform hover:scale-105">
             <CardHeader className="text-center">
               <div className="text-4xl mb-2">♻️</div>
-              <CardTitle className="text-xl text-primary">Recicla Hero</CardTitle>
-              <p className="text-muted-foreground text-sm">Drag & Drop • 2-5 min</p>
+              <CardTitle className="text-xl text-primary">{t('recyclaHero')}</CardTitle>
+              <p className="text-muted-foreground text-sm">{t('dragDrop')} • {t('gameTime25min')}</p>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Salve o planeta separando o lixo! Arraste os itens para as lixeiras corretas e seja um herói da reciclagem.
+                {t('recyclaHeroDescription')}
               </p>
               <Button 
                 onClick={() => setSelectedGame('recycle')}
                 className="w-full"
               >
-                Jogar Agora
+                {t('playNow')}
               </Button>
             </CardContent>
           </Card>
@@ -764,17 +764,17 @@ const GamesPage = () => {
           className="flex items-center space-x-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Voltar</span>
+          <span>{t('goBack')}</span>
         </Button>
         
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-primary">♻️ Recicla Hero</h2>
-          <p className="text-sm text-muted-foreground">Salve o planeta!</p>
+          <h2 className="text-2xl font-bold text-primary">♻️ {t('recyclaHero')}</h2>
+          <p className="text-sm text-muted-foreground">{t('savePlanet')}</p>
         </div>
         
         <Button onClick={resetRecycleGame} variant="outline" size="sm">
           <RotateCcw className="h-4 w-4 mr-2" />
-          Reiniciar
+          {t('restart')}
         </Button>
       </header>
 
@@ -786,7 +786,7 @@ const GamesPage = () => {
           </Badge>
           {recycleCombo > 2 && (
             <Badge variant="outline" className="text-sm font-bold px-2 py-1 bg-yellow-100 border-yellow-300">
-              🔥 Combo x{recycleCombo}
+              🔥 {t('combo')} x{recycleCombo}
             </Badge>
           )}
         </div>
@@ -799,7 +799,7 @@ const GamesPage = () => {
             ❤️ {recycleLives}
           </Badge>
           <Badge variant="outline" className="px-2 py-1">
-            Nível {recycleLevel}
+            {t('level')} {recycleLevel}
           </Badge>
         </div>
       </div>
@@ -929,37 +929,37 @@ const GamesPage = () => {
                 {recycleScore > 500 ? '🏆' : recycleScore > 200 ? '🌟' : '🌱'}
               </div>
               <CardTitle className="text-2xl">
-                {recycleScore > 500 ? 'Eco-Herói Lendário!' : recycleScore > 200 ? 'Guardião da Natureza!' : 'Boa Tentativa!'}
+                {recycleScore > 500 ? t('ecoHeroLegendary') : recycleScore > 200 ? t('guardianOfNature') : t('goodTry')}
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-green-50 p-3 rounded-lg">
                   <div className="text-lg font-bold text-green-700">{recycleScore}</div>
-                  <div className="text-sm text-green-600">Pontos</div>
+                  <div className="text-sm text-green-600">{t('points')}</div>
                 </div>
                 <div className="bg-yellow-50 p-3 rounded-lg">
                   <div className="text-lg font-bold text-yellow-700">{recycleMaxCombo}</div>
-                  <div className="text-sm text-yellow-600">Maior Combo</div>
+                  <div className="text-sm text-yellow-600">{t('bestCombo')}</div>
                 </div>
               </div>
               
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <p className="text-blue-700 font-medium">💡 Dica Ecológica:</p>
+                <p className="text-blue-700 font-medium">💡 {t('ecoTip')}:</p>
                 <p className="text-blue-600 text-sm mt-1">
                   {recycleScore > 300 
-                    ? "Parabéns! A reciclagem correta pode reduzir até 50% do lixo doméstico!"
-                    : "Reciclar uma lata de alumínio economiza energia suficiente para alimentar uma TV por 3 horas!"
+                    ? t('recyclingTip1')
+                    : t('recyclingTip2')
                   }
                 </p>
               </div>
               
               <div className="flex space-x-2">
                 <Button onClick={resetRecycleGame} className="flex-1">
-                  Jogar Novamente
+                  {t('playAgain')}
                 </Button>
                 <Button onClick={() => setSelectedGame(null)} variant="outline" className="flex-1">
-                  Menu Principal
+                  {t('mainMenu')}
                 </Button>
               </div>
             </CardContent>
