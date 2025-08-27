@@ -93,29 +93,25 @@ const Dashboard: React.FC = () => {
           <MetricCard
             title={t('conversationsToday')}
             value={stats?.conversationsToday || 0}
-            icon={MessageCircle}
-            loading={loading}
+            icon={<MessageCircle />}
             className="bg-blue-50 border-blue-200"
           />
           <MetricCard
             title={t('queriesPerformed')}
             value={stats?.totalMessages || 0}
-            icon={BarChart3}
-            loading={loading}
+            icon={<BarChart3 />}
             className="bg-green-50 border-green-200"
           />
           <MetricCard
             title={t('tokensUsed')}
             value={stats?.estimatedTokens || 0}
-            icon={Activity}
-            loading={loading}
+            icon={<Activity />}
             className="bg-purple-50 border-purple-200"
           />
           <MetricCard
             title={t('recentActivity')}
             value={stats?.recentActivity?.length || 0}
-            icon={Clock}
-            loading={loading}
+            icon={<Clock />}
             className="bg-orange-50 border-orange-200"
           />
         </div>
