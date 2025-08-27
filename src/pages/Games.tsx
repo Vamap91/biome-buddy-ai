@@ -373,7 +373,7 @@ const GamesPage = () => {
     setFallingTrash(prev => prev.filter(item => item.id !== trashId));
   };
 
-  // Game loop do Recicla Hero
+  // Game loop do Recicla Hero - Movimento dos itens
   useEffect(() => {
     if (recycleGameState !== 'playing') return;
 
@@ -404,8 +404,16 @@ const GamesPage = () => {
         
         return updated;
       });
+    }, 100);
 
-      // Timer do jogo
+    return () => clearInterval(gameLoop);
+  }, [recycleGameState, activePowerUp]);
+
+  // Timer do jogo - separado para contar segundos reais
+  useEffect(() => {
+    if (recycleGameState !== 'playing') return;
+
+    const timerInterval = setInterval(() => {
       setRecycleTimeLeft(prev => {
         const newTime = prev - 1;
         if (newTime <= 0) {
@@ -413,10 +421,10 @@ const GamesPage = () => {
         }
         return newTime;
       });
-    }, 100);
+    }, 1000); // 1000ms = 1 segundo real
 
-    return () => clearInterval(gameLoop);
-  }, [recycleGameState, activePowerUp]);
+    return () => clearInterval(timerInterval);
+  }, [recycleGameState]);
 
   // Spawn de lixo
   useEffect(() => {
