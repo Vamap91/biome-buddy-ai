@@ -6,14 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useBlogPosts } from '@/hooks/useBlogPosts';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useAuth } from '@/hooks/useAuth';
 import BlogHeader from '@/components/blog/BlogHeader';
 import BlogPostCard from '@/components/blog/BlogPostCard';
 import CreatePostForm from '@/components/blog/CreatePostForm';
 import PostDetail from '@/components/blog/PostDetail';
 
 const Blog: React.FC = () => {
-  const { posts, loading, createPost, toggleLike } = useBlogPosts();
+  const { posts, loading, createPost, toggleLike, deletePost } = useBlogPosts();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'home' | 'create' | 'detail'>('home');
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,6 +69,18 @@ const Blog: React.FC = () => {
     setCurrentView(view as 'home' | 'create' | 'detail');
   };
 
+  const handleDeletePost = async (postId: string) => {
+    await deletePost(postId);
+    // Se estamos vendo o detalhe do post que foi deletado, voltar para home
+    if (currentView === 'detail' && selectedPost?.id === postId) {
+      setCurrentView('home');
+    }
+  };
+
+  const canDeletePost = (post: any) => {
+    return user && user.id === post.user_id;
+  };
+
   if (currentView === 'create') {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -87,6 +101,8 @@ const Blog: React.FC = () => {
           post={selectedPost}
           onBack={() => setCurrentView('home')}
           onUpdatePost={handleUpdatePost}
+          onDeletePost={handleDeletePost}
+          canDelete={canDeletePost(selectedPost)}
         />
       </div>
     );
@@ -160,6 +176,8 @@ const Blog: React.FC = () => {
                   variant="featured"
                   onViewPost={() => handlePostClick(post)}
                   onToggleLike={() => toggleLike(post.id)}
+                  onDeletePost={handleDeletePost}
+                  canDelete={canDeletePost(post)}
                 />
               ))}
             </div>
@@ -204,6 +222,8 @@ const Blog: React.FC = () => {
                   post={post}
                   onViewPost={() => handlePostClick(post)}
                   onToggleLike={() => toggleLike(post.id)}
+                  onDeletePost={handleDeletePost}
+                  canDelete={canDeletePost(post)}
                 />
               ))}
             </div>

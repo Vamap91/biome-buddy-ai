@@ -9,7 +9,9 @@ import {
   MessageCircle, 
   Share2, 
   Tag,
-  User
+  User,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BlogPost } from '@/hooks/useBlogPosts';
@@ -19,9 +21,17 @@ interface PostDetailProps {
   post: BlogPost;
   onBack: () => void;
   onUpdatePost: (updatedPost: BlogPost) => void;
+  onDeletePost?: (postId: string) => void;
+  canDelete?: boolean;
 }
 
-const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) => {
+const PostDetail: React.FC<PostDetailProps> = ({ 
+  post, 
+  onBack, 
+  onUpdatePost, 
+  onDeletePost,
+  canDelete = false 
+}) => {
   const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
 
@@ -112,6 +122,21 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onBack, onUpdatePost }) =
                 <Share2 className="h-4 w-4 mr-2" />
                 Compartilhar
               </Button>
+              {canDelete && onDeletePost && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    if (window.confirm('Tem certeza que deseja deletar este post? Esta ação não pode ser desfeita.')) {
+                      onDeletePost(post.id);
+                    }
+                  }}
+                  className="text-red-500 hover:text-red-600 border-red-200 hover:border-red-300"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Deletar Post
+                </Button>
+              )}
               <div className="flex items-center space-x-3 text-sm text-gray-500">
                 <span className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />

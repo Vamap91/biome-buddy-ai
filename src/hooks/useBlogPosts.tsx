@@ -207,11 +207,40 @@ export const useBlogPosts = () => {
     fetchPosts();
   }, [user]);
 
+  const deletePost = async (postId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('blog_posts')
+        .delete()
+        .eq('id', postId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso!",
+        description: "Post deletado com sucesso.",
+      });
+
+      // Recarregar posts
+      await fetchPosts();
+    } catch (error) {
+      console.error('Erro ao deletar post:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar o post.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     posts,
     loading,
     createPost,
     toggleLike,
+    deletePost,
     refetch: fetchPosts
   };
 };

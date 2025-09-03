@@ -12,7 +12,8 @@ import {
   Heart,
   MessageCircle,
   User,
-  Image
+  Image,
+  Trash2
 } from 'lucide-react';
 import { BlogPost } from '@/hooks/useBlogPosts';
 
@@ -20,14 +21,18 @@ interface BlogPostCardProps {
   post: BlogPost;
   onViewPost: (post: BlogPost) => void;
   onToggleLike: (postId: string) => void;
+  onDeletePost?: (postId: string) => void;
   variant?: 'featured' | 'normal';
+  canDelete?: boolean;
 }
 
 const BlogPostCard: React.FC<BlogPostCardProps> = ({ 
   post, 
   onViewPost, 
   onToggleLike, 
-  variant = 'normal' 
+  onDeletePost,
+  variant = 'normal',
+  canDelete = false 
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -193,6 +198,16 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
                   <MessageCircle className="h-4 w-4 mr-1" />
                   {post.comments}
                 </span>
+                {canDelete && onDeletePost && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeletePost(post.id)}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
