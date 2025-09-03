@@ -17,6 +17,7 @@ import FreeChat from "./pages/FreeChat";
 import Settings from "./pages/Settings";
 import Blog from "./pages/Blog";
 import Games from "./pages/Games";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute>
                       <Games />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <Admin />
                     </ProtectedRoute>
                   }
                 />
