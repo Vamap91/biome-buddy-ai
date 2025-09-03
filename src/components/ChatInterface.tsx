@@ -133,15 +133,15 @@ const ChatInterface = ({
               </Avatar>
 
               <div className={cn(
-                "flex-1 max-w-[80%]",
+                "flex-1",
                 message.sender === 'user' ? 'text-right' : ''
               )}>
                 <div
                   className={cn(
-                    "inline-block p-3 rounded-2xl text-sm",
+                    "inline-block p-3 rounded-2xl text-sm max-w-[85%] break-words whitespace-pre-wrap",
                     message.sender === 'user'
                       ? 'bg-primary text-primary-foreground ml-auto'
-                      : 'bg-muted'
+                      : 'bg-muted mr-auto'
                   )}
                 >
                   {message.content}
