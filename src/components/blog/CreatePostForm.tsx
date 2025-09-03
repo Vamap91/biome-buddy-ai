@@ -1,11 +1,12 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Save, X } from 'lucide-react';
+import { Edit, Save, X, Upload, Image } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreatePostFormProps {
   onCreatePost: (post: {
@@ -14,6 +15,7 @@ interface CreatePostFormProps {
     content: string;
     category: string;
     tags: string[];
+    image_url?: string;
   }) => void;
   onCancel: () => void;
 }
@@ -25,9 +27,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
     content: '',
     category: 'pesquisa',
     tags: [] as string[],
-    newTag: ''
+    newTag: '',
+    image_url: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({
@@ -60,6 +65,37 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
     }
   }, [addTag]);
 
+  const handleImageUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blog-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('blog-images')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({
+        ...prev,
+        image_url: data.publicUrl
+      }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setUploadingImage(false);
+    }
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!formData.title.trim() || !formData.content.trim()) return;
     
@@ -70,7 +106,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
         excerpt: formData.excerpt || formData.content.slice(0, 200) + '...',
         content: formData.content,
         category: formData.category,
-        tags: formData.tags
+        tags: formData.tags,
+        image_url: formData.image_url
       });
     } finally {
       setIsSubmitting(false);
@@ -123,6 +160,50 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onCreatePost, onCancel 
             </select>
           </div>
           
+          <div>
+            <label className="block text-sm font-medium mb-2">Imagem do Post</label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="flex items-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  {uploadingImage ? 'Enviando...' : 'Selecionar Imagem'}
+                </Button>
+              </div>
+              
+              {formData.image_url && (
+                <div className="relative">
+                  <img
+                    src={formData.image_url}
+                    alt="Preview"
+                    className="w-full h-48 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-2">Tags</label>
             <div className="flex gap-2 mb-2">

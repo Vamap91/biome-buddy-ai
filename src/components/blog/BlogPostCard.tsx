@@ -11,7 +11,8 @@ import {
   Eye,
   Heart,
   MessageCircle,
-  User
+  User,
+  Image
 } from 'lucide-react';
 import { BlogPost } from '@/hooks/useBlogPosts';
 
@@ -45,7 +46,18 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
   if (variant === 'featured') {
     return (
       <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-        <div className="h-48 bg-gradient-to-r from-green-400 to-green-600 relative">
+        <div className="h-48 relative overflow-hidden">
+          {post.image_url ? (
+            <img 
+              src={post.image_url} 
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center">
+              <Image className="h-12 w-12 text-white/80" />
+            </div>
+          )}
           <Badge className="absolute top-4 left-4 bg-white text-green-700">
             Destaque
           </Badge>
@@ -96,29 +108,41 @@ const BlogPostCard: React.FC<BlogPostCardProps> = ({
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-6">
-          <div className="md:w-32 h-24 bg-gradient-to-r from-green-400 to-green-600 rounded-lg flex-shrink-0"></div>
+          <div className="md:w-32 h-24 rounded-lg flex-shrink-0 overflow-hidden">
+            {post.image_url ? (
+              <img 
+                src={post.image_url} 
+                alt={post.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center">
+                <Image className="h-8 w-8 text-white/80" />
+              </div>
+            )}
+          </div>
           
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-3">
-              <div>
+              <div className="min-w-0 flex-1">
                 <Badge variant="outline" className="mb-2 capitalize">
                   {post.category}
                 </Badge>
                 <h3 
-                  className="text-xl font-bold hover:text-green-600 cursor-pointer"
+                  className="text-xl font-bold hover:text-green-600 cursor-pointer line-clamp-2 break-words"
                   onClick={() => onViewPost(post)}
                 >
                   {post.title}
                 </h3>
               </div>
               {post.featured && (
-                <Badge className="bg-yellow-100 text-yellow-800">
+                <Badge className="bg-yellow-100 text-yellow-800 ml-2 flex-shrink-0">
                   Destaque
                 </Badge>
               )}
             </div>
             
-            <p className="text-gray-600 mb-4">{post.excerpt}</p>
+            <p className="text-gray-600 mb-4 line-clamp-3 break-words">{post.excerpt}</p>
             
             <div className="flex flex-wrap gap-2 mb-4">
               {post.tags.map(tag => (

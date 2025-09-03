@@ -15,6 +15,7 @@ export interface BlogPost {
   created_at: string;
   updated_at: string;
   user_id: string;
+  image_url?: string;
   // Dados do usuário via join com profiles
   author?: string;
   authorRole?: string;
@@ -119,6 +120,7 @@ export const useBlogPosts = () => {
     content: string;
     category: string;
     tags: string[];
+    image_url?: string;
   }) => {
     if (!user) return;
 
