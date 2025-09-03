@@ -248,12 +248,12 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/login">
-                <Button size="lg" className="bg-white text-green-600 hover:bg-gray-50 px-8 py-4 text-lg font-semibold">
+                <Button size="lg" className="bg-white text-primary hover:bg-gray-50 px-8 py-4 text-lg font-semibold">
                   Criar Conta Gratuita
                 </Button>
               </Link>
               <Link to="/free-chat">
-                <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-4 text-lg">
+                <Button size="lg" variant="outline-light" className="px-8 py-4 text-lg">
                   Experimentar sem Cadastro
                 </Button>
               </Link>
