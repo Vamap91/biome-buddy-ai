@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,12 +12,14 @@ import {
   BarChart3,
   Users,
   Activity,
-  Clock
+  Clock,
+  Shield
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { supabase } from '@/integrations/supabase/client';
 import MetricCard from '@/components/MetricCard';
 import UpgradeModal from '@/components/UpgradeModal';
 
@@ -27,6 +29,24 @@ const Dashboard: React.FC = () => {
   const { t } = useLanguage();
   const { stats, loading } = useDashboardStats();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase.rpc('is_admin');
+        if (!error) {
+          setIsAdmin(data || false);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -57,6 +77,12 @@ const Dashboard: React.FC = () => {
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span>{t('online')}</span>
               </Badge>
+              {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
                 <Settings className="h-4 w-4 mr-2" />
                 {t('settings')}
