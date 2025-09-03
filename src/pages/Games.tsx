@@ -37,6 +37,86 @@ const GamesPage = () => {
   const [memoryMoves, setMemoryMoves] = useState(0);
   const [memoryGameWon, setMemoryGameWon] = useState(false);
 
+  // Quiz Game States
+  const [quizCurrentQuestion, setQuizCurrentQuestion] = useState(0);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizGameEnded, setQuizGameEnded] = useState(false);
+  const [quizSelectedAnswer, setQuizSelectedAnswer] = useState(null);
+  const [quizShowResult, setQuizShowResult] = useState(false);
+
+  // Perguntas do Quiz sobre Meio Ambiente e Amazônia para Crianças
+  const quizQuestions = [
+    {
+      id: 1,
+      question: "Qual é a maior floresta tropical do mundo?",
+      options: ["Mata Atlântica", "Floresta Amazônica", "Floresta do Congo", "Floresta Boreal"],
+      correct: 1,
+      explanation: "A Floresta Amazônica é a maior floresta tropical do mundo! 🌳"
+    },
+    {
+      id: 2,
+      question: "Quantos pulmões o planeta Terra tem?",
+      options: ["1 pulmão (Amazônia)", "2 pulmões (florestas)", "A Terra não tem pulmões!", "3 pulmões"],
+      correct: 2,
+      explanation: "Na verdade, a Terra não tem pulmões! As plantas fazem fotossíntese, mas também respiram! 🌱"
+    },
+    {
+      id: 3,
+      question: "Qual animal é símbolo da conservação da Amazônia?",
+      options: ["Gato", "Cachorro", "Onça-pintada", "Galinha"],
+      correct: 2,
+      explanation: "A onça-pintada é o maior felino das Américas e símbolo da Amazônia! 🐆"
+    },
+    {
+      id: 4,
+      question: "O que significa 'biodiversidade'?",
+      options: ["Muitos tipos de vida", "Muitas árvores", "Muita água", "Muitas pedras"],
+      correct: 0,
+      explanation: "Biodiversidade significa a variedade de vida na Terra - plantas, animais e microorganismos! 🦋"
+    },
+    {
+      id: 5,
+      question: "Qual é a melhor forma de ajudar o meio ambiente?",
+      options: ["Desperdiçar água", "Jogar lixo no chão", "Separar o lixo e reciclar", "Cortar árvores"],
+      correct: 2,
+      explanation: "Separar o lixo e reciclar ajuda muito o meio ambiente! Reduzir, reutilizar e reciclar! ♻️"
+    },
+    {
+      id: 6,
+      question: "Por que as árvores são importantes?",
+      options: ["Só para fazer sombra", "Produzem oxigênio e absorvem CO₂", "Não são importantes", "Só para os pássaros"],
+      correct: 1,
+      explanation: "As árvores produzem oxigênio, absorvem CO₂, fazem sombra e são casa para muitos animais! 🌲"
+    },
+    {
+      id: 7,
+      question: "Qual rio atravessa a Floresta Amazônica?",
+      options: ["Rio Nilo", "Rio Amazonas", "Rio Tietê", "Rio São Francisco"],
+      correct: 1,
+      explanation: "O Rio Amazonas é o maior rio do mundo em volume de água! 🌊"
+    },
+    {
+      id: 8,
+      question: "O que é o 'efeito estufa'?",
+      options: ["Uma casa para plantas", "Aquecimento natural da Terra", "Um tipo de chuva", "Uma doença das plantas"],
+      correct: 1,
+      explanation: "O efeito estufa é o aquecimento natural da Terra, mas poluição pode torná-lo excessivo! 🌡️"
+    },
+    {
+      id: 9,
+      question: "Qual animal da Amazônia é conhecido por ser muito lento?",
+      options: ["Onça", "Preguiça", "Macaco", "Jacaré"],
+      correct: 1,
+      explanation: "A preguiça é famosa por se mover bem devagar para economizar energia! 🦥"
+    },
+    {
+      id: 10,
+      question: "Como podemos economizar água em casa?",
+      options: ["Deixando a torneira aberta", "Tomando banho de 1 hora", "Fechando a torneira ao escovar os dentes", "Lavando o carro todo dia"],
+      correct: 2,
+      explanation: "Fechar a torneira ao escovar os dentes economiza muita água! 💧"
+    }
+  ];
 
   // Dados dos animais brasileiros
   const animalFacts = [
@@ -208,9 +288,54 @@ const GamesPage = () => {
     }
   };
 
+  // Funções do Quiz
+  const resetQuiz = () => {
+    setQuizCurrentQuestion(0);
+    setQuizScore(0);
+    setQuizGameEnded(false);
+    setQuizSelectedAnswer(null);
+    setQuizShowResult(false);
+  };
+
+  const handleQuizAnswer = (answerIndex) => {
+    if (quizSelectedAnswer !== null) return; // Prevent multiple clicks
+    
+    setQuizSelectedAnswer(answerIndex);
+    setQuizShowResult(true);
+    
+    // Check if answer is correct
+    const isCorrect = answerIndex === quizQuestions[quizCurrentQuestion].correct;
+    if (isCorrect) {
+      setQuizScore(quizScore + 10); // 10 points per correct answer
+    }
+    
+    // Move to next question after delay
+    setTimeout(() => {
+      if (quizCurrentQuestion < quizQuestions.length - 1) {
+        setQuizCurrentQuestion(quizCurrentQuestion + 1);
+        setQuizSelectedAnswer(null);
+        setQuizShowResult(false);
+      } else {
+        setQuizGameEnded(true);
+      }
+    }, 2500);
+  };
+
+  const getScoreBadge = (score) => {
+    const maxScore = quizQuestions.length * 10;
+    const percentage = (score / maxScore) * 100;
+    
+    if (percentage >= 90) return { emoji: '🏆', title: 'Especialista em Meio Ambiente!', color: 'text-yellow-600' };
+    if (percentage >= 70) return { emoji: '🌟', title: 'Defensor da Natureza!', color: 'text-green-600' };
+    if (percentage >= 50) return { emoji: '🌱', title: 'Amigo da Natureza!', color: 'text-green-500' };
+    return { emoji: '🌿', title: 'Explorador da Natureza!', color: 'text-green-400' };
+  };
+
   useEffect(() => {
     if (selectedGame === 'memory') {
       initializeMemoryGame();
+    } else if (selectedGame === 'quiz') {
+      resetQuiz();
     }
   }, [selectedGame]);
 
@@ -244,7 +369,7 @@ const GamesPage = () => {
           </div>
         </header>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {/* Jogo da Velha */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer transform hover:scale-105">
             <CardHeader className="text-center">
@@ -281,6 +406,26 @@ const GamesPage = () => {
                 className="w-full"
               >
                 {t('playNow')}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Quiz Eco Kids */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer transform hover:scale-105">
+            <CardHeader className="text-center">
+              <div className="text-4xl mb-2">🌱</div>
+              <CardTitle className="text-xl text-primary">Quiz Eco Kids</CardTitle>
+              <p className="text-muted-foreground text-sm">10 perguntas • 5-8 min</p>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-4">
+                Teste seus conhecimentos sobre meio ambiente e Amazônia! Perguntas divertidas para crianças.
+              </p>
+              <Button 
+                onClick={() => setSelectedGame('quiz')}
+                className="w-full"
+              >
+                Jogar Quiz
               </Button>
             </CardContent>
           </Card>
@@ -477,11 +622,177 @@ const GamesPage = () => {
     </div>
   );
 
+  const QuizGame = () => {
+    const currentQuestion = quizQuestions[quizCurrentQuestion];
+    const scoreBadge = getScoreBadge(quizScore);
+    
+    if (quizGameEnded) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-nature-light to-nature-medium p-4">
+          <div className="max-w-2xl mx-auto">
+            <header className="flex items-center justify-between mb-6">
+              <Button 
+                variant="ghost" 
+                onClick={() => setSelectedGame(null)}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Voltar</span>
+              </Button>
+              <h2 className="text-2xl font-bold text-primary">🌱 Quiz Eco Kids</h2>
+              <Button onClick={resetQuiz} variant="outline" size="sm">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Jogar Novamente
+              </Button>
+            </header>
+
+            <Card className="p-8 text-center">
+              <div className="space-y-6">
+                <div className="text-6xl mb-4">{scoreBadge.emoji}</div>
+                <h3 className={`text-2xl font-bold ${scoreBadge.color}`}>
+                  {scoreBadge.title}
+                </h3>
+                <div className="space-y-2">
+                  <p className="text-3xl font-bold text-primary">
+                    {quizScore} / {quizQuestions.length * 10} pontos
+                  </p>
+                  <p className="text-lg text-muted-foreground">
+                    Você acertou {Math.round((quizScore / (quizQuestions.length * 10)) * 100)}% das perguntas!
+                  </p>
+                </div>
+                
+                <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                  <p className="text-primary font-medium">🌍 Você sabia?</p>
+                  <p className="text-primary/80 text-sm mt-2">
+                    A Floresta Amazônica produz cerca de 20% do oxigênio do mundo e é lar de mais de 40.000 espécies de plantas!
+                  </p>
+                </div>
+
+                <div className="flex gap-4 justify-center">
+                  <Button onClick={resetQuiz} size="lg">
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Jogar Novamente
+                  </Button>
+                  <Button onClick={() => setSelectedGame(null)} variant="outline" size="lg">
+                    Outros Jogos
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-nature-light to-nature-medium p-4">
+        <div className="max-w-2xl mx-auto">
+          <header className="flex items-center justify-between mb-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedGame(null)}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Voltar</span>
+            </Button>
+            <h2 className="text-2xl font-bold text-primary">🌱 Quiz Eco Kids</h2>
+            <div className="text-right">
+              <Badge variant="outline" className="mb-1">
+                <Trophy className="h-3 w-3 mr-1" />
+                {quizScore} pontos
+              </Badge>
+              <br />
+              <Badge variant="secondary">
+                {quizCurrentQuestion + 1} / {quizQuestions.length}
+              </Badge>
+            </div>
+          </header>
+
+          <Card className="p-6">
+            <div className="space-y-6">
+              {/* Progresso */}
+              <div className="w-full bg-accent rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((quizCurrentQuestion + 1) / quizQuestions.length) * 100}%` }}
+                ></div>
+              </div>
+
+              {/* Pergunta */}
+              <div className="text-center space-y-4">
+                <h3 className="text-xl font-bold text-foreground">
+                  {currentQuestion.question}
+                </h3>
+              </div>
+
+              {/* Opções de Resposta */}
+              <div className="grid gap-3">
+                {currentQuestion.options.map((option, index) => {
+                  let buttonClass = "w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ";
+                  
+                  if (quizShowResult) {
+                    if (index === currentQuestion.correct) {
+                      buttonClass += "border-green-500 bg-green-50 text-green-700";
+                    } else if (index === quizSelectedAnswer && index !== currentQuestion.correct) {
+                      buttonClass += "border-red-500 bg-red-50 text-red-700";
+                    } else {
+                      buttonClass += "border-border bg-muted/50 text-muted-foreground";
+                    }
+                  } else {
+                    buttonClass += "border-border bg-card hover:border-primary hover:bg-primary/5 text-foreground";
+                  }
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleQuizAnswer(index)}
+                      className={buttonClass}
+                      disabled={quizShowResult}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-sm font-bold">
+                          {String.fromCharCode(65 + index)}
+                        </div>
+                        <span>{option}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Explicação da Resposta */}
+              {quizShowResult && (
+                <div className="bg-primary/10 p-4 rounded-lg border border-primary/20 animate-in slide-in-from-bottom-2">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-xl">
+                      {quizSelectedAnswer === currentQuestion.correct ? '🎉' : '🤔'}
+                    </span>
+                    <div>
+                      <p className="font-medium text-primary">
+                        {quizSelectedAnswer === currentQuestion.correct ? 'Parabéns!' : 'Quase lá!'}
+                      </p>
+                      <p className="text-primary/80 text-sm">
+                        {currentQuestion.explanation}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   // Render principal
   if (selectedGame === 'tictactoe') {
     return <TicTacToeGame />;
   } else if (selectedGame === 'memory') {
     return <MemoryGame />;
+  } else if (selectedGame === 'quiz') {
+    return <QuizGame />;
   } else {
     return <GameSelection />;
   }
