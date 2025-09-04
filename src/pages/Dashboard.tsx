@@ -30,6 +30,7 @@ const Dashboard: React.FC = () => {
   const { stats, loading } = useDashboardStats();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ full_name?: string; username?: string } | null>(null);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -45,7 +46,26 @@ const Dashboard: React.FC = () => {
       }
     };
 
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name, username')
+          .eq('id', user.id)
+          .single();
+        
+        if (!error && data) {
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
     checkAdminStatus();
+    fetchUserProfile();
   }, [user]);
 
   const handleLogout = async () => {
@@ -69,7 +89,7 @@ const Dashboard: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{t('dashboard')}</h1>
-                <p className="text-sm text-gray-600">{t('welcome')}, {user?.email}</p>
+                <p className="text-sm text-gray-600">{t('welcome')}, {userProfile?.full_name || userProfile?.username || user?.email}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
